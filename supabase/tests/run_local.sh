@@ -30,5 +30,7 @@ psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -v ON_ERROR_STOP=1 -d "$RLS_DB" -f "
 
 echo "== デモ用DBを作成: $DB"
 apply_migrations "$DB"
+# 実環境では Admin API が作るデモユーザーを、ローカルでは模擬 auth.users に投入する
+"${PSQL[@]}" -d "$DB" -f "$ROOT/supabase/tests/_local_users.sql"
 "${PSQL[@]}" -d "$DB" -f "$ROOT/supabase/seed.sql"
 echo "seed applied ($DB)"

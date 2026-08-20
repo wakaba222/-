@@ -58,16 +58,21 @@ cp .env.example .env.local   # Supabase の URL / キーを設定
 npm run dev
 ```
 
-Supabase 側:
+### Supabase プロジェクトへの初期投入
 
 ```bash
-supabase start                       # ローカル環境
-supabase db reset                    # migrations + seed.sql を適用
-npm run db:types                     # DB型の再生成 (任意)
+npm run db:push -- supabase/migrations/*.sql   # スキーマ・RLS・監査ログ・マスタデータ
+npm run seed:users                             # デモユーザーを Auth の Admin API で作成
+npm run db:push -- supabase/seed.sql           # デモデータ (顧客27名・成果・売上)
+npm run verify:remote                          # 実環境の通し検証
 ```
 
-`supabase/migrations/` に スキーマ・監査ログ・RLS・マスタデータ、
-`supabase/seed.sql` にデモデータ (ADMIN1名・コーチ3名・顧客27名) が入っている。
+Supabase CLI が使える環境なら `supabase db reset` でも migrations を適用できる
+(その場合も認証ユーザーは `npm run seed:users` で作成する)。
+
+`seed.sql` は認証ユーザーを直接作らない。
+`auth` スキーマの構造は GoTrue のバージョンに追従するため、直接 INSERT すると
+ログインできない不整合が起きうる。デモユーザーは必ず Admin API 経由で作成する。
 
 ### デモアカウント
 
@@ -78,7 +83,7 @@ npm run db:types                     # DB型の再生成 (任意)
 | COACH | `sato@eagle.example` | P1・基準未達 (Score 50.2 / 行動ルール WARNING) |
 | COACH | `suzuki@eagle.example` | P3・最高評価 (Score 120 / 事業成果要件が未承認で昇格不可) |
 
-パスワードはいずれも `Passw0rd!` (デモ環境専用)。
+パスワードは `DEMO_USER_PASSWORD` に設定した値 (デモ環境専用)。
 
 ## テスト
 
@@ -102,6 +107,23 @@ npm run verify:seed   # シードデータに評価エンジンを実際に適�
 `db:local` は COACH が他コーチの顧客・売上へ到達できないこと、
 監査ログに変更前後が記録されることを DB レベルで検証する。
 `verify:seed` は DB → 評価 → 昇格判定までを通しで実行し、想定した結果になるか確認する。
+
+### 実環境の検証
+
+```bash
+npm run verify:remote
+```
+
+認証 → RLS → 権限昇格の防止 → Professional Score 算出 → 月次スナップショット →
+昇格判定までを、実際の Supabase プロジェクトに対して順に確認する。
+
+## 秘密情報の取り扱い
+
+- 実際のキーは `.env.local` にのみ置く (`.gitignore` 済み)
+- `SUPABASE_SERVICE_ROLE_KEY` はサーバー側の処理と運用スクリプトでのみ使用し、
+  クライアントバンドルには含めない (`NEXT_PUBLIC_` 接頭辞を付けない)
+- `SUPABASE_ACCESS_TOKEN` は初期セットアップ専用。作業後は Supabase の
+  Account Settings → Access Tokens から失効させてよい
 
 ## 運用フロー
 

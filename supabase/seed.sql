@@ -6,38 +6,39 @@
 -- 日付は current_date からの相対で生成するため、いつ流しても「直近3ヶ月」が埋まる。
 -- パスワードは全ユーザー共通で Passw0rd! (デモ環境専用)
 -- ============================================================================
-create extension if not exists pgcrypto;
+-- 認証ユーザー (auth.users) はここでは作らない。
+-- Supabase 実環境では auth スキーマの構造が GoTrue のバージョンに追従するため、
+-- 直接 INSERT するとログインできない不整合が起きうる。
+-- デモユーザーは公式の Admin API 経由で作成する: npm run seed:users
+do $$
+declare v_missing text;
+begin
+  select string_agg(t.email, ', ') into v_missing
+    from (values ('admin@eagle.example'), ('tanaka@eagle.example'),
+                 ('sato@eagle.example'), ('suzuki@eagle.example')) as t(email)
+   where not exists (select 1 from public.users u where u.email = t.email);
 
--- --- 認証ユーザー -----------------------------------------------------------
-insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
-                        raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
-values
-  ('00000000-0000-0000-0000-000000000000', '11111111-1111-1111-1111-111111111111', 'authenticated', 'authenticated',
-   'admin@eagle.example', crypt('Passw0rd!', gen_salt('bf')), now(),
-   '{"provider":"email","providers":["email"]}', '{"name":"経営管理者","role":"ADMIN"}', now(), now()),
-  ('00000000-0000-0000-0000-000000000000', '22222222-2222-2222-2222-222222222222', 'authenticated', 'authenticated',
-   'tanaka@eagle.example', crypt('Passw0rd!', gen_salt('bf')), now(),
-   '{"provider":"email","providers":["email"]}', '{"name":"田中 健一","role":"COACH"}', now(), now()),
-  ('00000000-0000-0000-0000-000000000000', '33333333-3333-3333-3333-333333333333', 'authenticated', 'authenticated',
-   'sato@eagle.example', crypt('Passw0rd!', gen_salt('bf')), now(),
-   '{"provider":"email","providers":["email"]}', '{"name":"佐藤 美咲","role":"COACH"}', now(), now()),
-  ('00000000-0000-0000-0000-000000000000', '44444444-4444-4444-4444-444444444444', 'authenticated', 'authenticated',
-   'suzuki@eagle.example', crypt('Passw0rd!', gen_salt('bf')), now(),
-   '{"provider":"email","providers":["email"]}', '{"name":"鈴木 大輔","role":"COACH"}', now(), now())
-on conflict (id) do nothing;
+  if v_missing is not null then
+    raise exception 'デモユーザーが未作成です (%)。先に `npm run seed:users` を実行してください', v_missing;
+  end if;
+end $$;
 
--- トリガで作られたプロフィール行を確定させる (トリガ未適用環境でも動くよう upsert)
-insert into public.users (id, name, email, role) values
-  ('11111111-1111-1111-1111-111111111111', '経営管理者', 'admin@eagle.example',  'ADMIN'),
-  ('22222222-2222-2222-2222-222222222222', '田中 健一',  'tanaka@eagle.example', 'COACH'),
-  ('33333333-3333-3333-3333-333333333333', '佐藤 美咲',  'sato@eagle.example',   'COACH'),
-  ('44444444-4444-4444-4444-444444444444', '鈴木 大輔',  'suzuki@eagle.example', 'COACH')
-on conflict (id) do update set name = excluded.name, role = excluded.role;
+-- ロールは Admin API のメタデータからトリガが設定するが、取りこぼしを防ぐため明示する
+update public.users set role = 'ADMIN', name = '経営管理者' where email = 'admin@eagle.example';
+update public.users set role = 'COACH' where email in ('tanaka@eagle.example', 'sato@eagle.example', 'suzuki@eagle.example');
+update public.users set name = '田中 健一' where email = 'tanaka@eagle.example';
+update public.users set name = '佐藤 美咲' where email = 'sato@eagle.example';
+update public.users set name = '鈴木 大輔' where email = 'suzuki@eagle.example';
 
-insert into public.coaches (id, user_id, professional_level, lesson_unit_price, hire_date) values
-  ('aaaaaaaa-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222', 'P2', 10000, current_date - interval '3 years'),
-  ('aaaaaaaa-0000-0000-0000-000000000002', '33333333-3333-3333-3333-333333333333', 'P1',     0, current_date - interval '10 months'),
-  ('aaaaaaaa-0000-0000-0000-000000000003', '44444444-4444-4444-4444-444444444444', 'P3', 12000, current_date - interval '5 years')
+insert into public.coaches (id, user_id, professional_level, lesson_unit_price, hire_date)
+select 'aaaaaaaa-0000-0000-0000-000000000001'::uuid, u.id, 'P2'::professional_level, 10000, current_date - interval '3 years'
+  from public.users u where u.email = 'tanaka@eagle.example'
+union all
+select 'aaaaaaaa-0000-0000-0000-000000000002'::uuid, u.id, 'P1'::professional_level, 0, current_date - interval '10 months'
+  from public.users u where u.email = 'sato@eagle.example'
+union all
+select 'aaaaaaaa-0000-0000-0000-000000000003'::uuid, u.id, 'P3'::professional_level, 12000, current_date - interval '5 years'
+  from public.users u where u.email = 'suzuki@eagle.example'
 on conflict (user_id) do nothing;
 
 -- --- 顧客の仕様表 -----------------------------------------------------------
@@ -108,7 +109,9 @@ declare
   v_achieved   date;
   v_target_s   numeric;
   v_target_d   numeric;
+  v_admin      uuid;
 begin
+  select id into v_admin from public.users where email = 'admin@eagle.example';
   for r in select * from seed_customers loop
     v_coach := case r.coach_no
                  when 1 then 'aaaaaaaa-0000-0000-0000-000000000001'::uuid
@@ -140,7 +143,7 @@ begin
       case when v_target_s is not null then v_target_s + 20 end, v_target_s,
       case when v_target_d is not null then v_target_d - 25 end, v_target_d,
       r.goal_type, r.goal_status,
-      case when r.goal_status = 'APPROVED' then '11111111-1111-1111-1111-111111111111'::uuid end,
+      case when r.goal_status = 'APPROVED' then v_admin end,
       case when r.goal_status = 'APPROVED' then v_start + interval '3 days' end,
       case when v_target_s is not null then coalesce(v_target_s - 2, 0) + case when v_achieved is null then 6 else 0 end end,
       case when v_target_d is not null then v_target_d + case when v_achieved is null then -12 else 5 end end,
@@ -153,7 +156,7 @@ begin
             case when v_target_s is not null then v_target_s + 20 end, v_target_s,
             case when v_target_d is not null then v_target_d - 25 end, v_target_d,
             r.goal_status,
-            case when r.goal_status = 'APPROVED' then '11111111-1111-1111-1111-111111111111'::uuid end,
+            case when r.goal_status = 'APPROVED' then v_admin end,
             case when r.goal_status = 'APPROVED' then v_start + interval '3 days' end,
             v_start)
     returning id into v_goal;
@@ -240,7 +243,7 @@ insert into public.coach_behavior_statuses (coach_id, year_month, status, set_by
 select c.id, to_char(current_date - make_interval(months => m), 'YYYY-MM'),
        case when c.id = 'aaaaaaaa-0000-0000-0000-000000000002' and m = 0 then 'WARNING'::behavior_status
             else 'OK'::behavior_status end,
-       '11111111-1111-1111-1111-111111111111'
+       (select id from public.users where email = 'admin@eagle.example')
 from public.coaches c, generate_series(0, 3) as m
 on conflict do nothing;
 
@@ -248,7 +251,7 @@ on conflict do nothing;
 insert into public.promotion_requirement_checks (coach_id, requirement_code, label, achieved_count, approved_by, approved_at)
 values
   ('aaaaaaaa-0000-0000-0000-000000000001', 'SENIOR_ACTIVITY', '上位活動要件 (1対多数の専門性)', 2,
-   '11111111-1111-1111-1111-111111111111', now()),
+   (select id from public.users where email = 'admin@eagle.example'), now()),
   ('aaaaaaaa-0000-0000-0000-000000000003', 'OWN_BUSINESS_RESULT', '本人起点の事業成果', 0, null, null)
 on conflict (coach_id, requirement_code) do nothing;
 
