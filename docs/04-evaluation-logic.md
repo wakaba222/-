@@ -7,33 +7,32 @@
 ```jsonc
 {
   "version": 1,
-  "effective_from": "2026-01-01",
+  "effectiveFrom": "2026-01-01",
 
   "eligibility": {
-    "min_elapsed_months": 4,          // 開始4ヶ月後から評価対象 (仕様7章)
-    "require_goal_approved": true,    // ADMIN未承認の目標は評価に使わない (仕様6章)
-    "count_suspended_months": false,  // 休会中は経過月数を進めない
-    "include_cancelled": false,       // 途中解約は分母から除外
-    "include_cancelled_reason_codes": ["PERFORMANCE"] // 成果不振解約だけは分母に残す
+    "minElapsedMonths": 4,          // 開始4ヶ月後から評価対象 (仕様7章)
+    "requireGoalApproved": true,    // ADMIN未承認の目標は評価に使わない (仕様6章)
+    "countSuspendedMonths": false,  // 休会中は経過月数を進めない
+        "includeCancelledReasonCodes": ["PERFORMANCE"] // 成果不振解約だけは分母に残す
   },
 
-  "customer_success": {
-    "both_goal_rule": "ALL",          // BOTH=両方達成 (ANYに変更可)
-    "long_term":  { "anchors": [[0, 0], [0.90, 30], [1.00, 36]], "max": 36 },
-    "short_term": { "window_months": 3,
+  "customerSuccess": {
+    "bothGoalRule": "ALL",          // BOTH=両方達成 (ANYに変更可)
+    "longTerm":  { "anchors": [[0, 0], [0.90, 30], [1.00, 36]], "max": 36 },
+    "shortTerm": { "windowMonths": 3,
                     "anchors": [[0, 0], [0.90, 20], [1.00, 24]], "max": 24 }
   },
 
   "sales": {
-    "include_coach_sns": false,       // MVP既定: SNS経由Re:Swingは売上点から除外 (仕様14章)
-    "score_basis": "MONTHLY",         // MONTHLY | ROLLING_3M (Q2)
+    "includeCoachSns": false,       // MVP既定: SNS経由Re:Swingは売上点から除外 (仕様14章)
+    "scoreBasis": "MONTHLY",         // MONTHLY | ROLLING_3M (Q2)
     "monthly":   { "anchors": [[0,0], [2000000, 40], [3500000, 50], [5000000, 60]] },
     "quarterly": { "anchors": [[0,0], [6000000, 40], [10500000, 50], [15000000, 60]] },
     "annual":    { "anchors": [[0,0], [24000000, 40], [42000000, 50], [60000000, 60]] },
     "max": 60
   },
 
-  "score_bands": [
+  "scoreBands": [
     { "min": 0,   "max": 79,  "label": "基準未達" },
     { "min": 80,  "max": 89,  "label": "基準クリア" },
     { "min": 90,  "max": 99,  "label": "高成果" },
@@ -42,7 +41,7 @@
     { "min": 120, "max": 120, "label": "最高評価" }
   ],
 
-  "quarterly_bonus": [                // 3ヶ月平均PSで決定 (単月判定しない)
+  "quarterlyBonus": [                // 3ヶ月平均PSで決定 (単月判定しない)
     { "min": 0,   "amount": 0 },      { "min": 80,  "amount": 30000 },
     { "min": 90,  "amount": 50000 },  { "min": 100, "amount": 100000 },
     { "min": 110, "amount": 150000 }, { "min": 120, "amount": 200000 }
@@ -50,33 +49,36 @@
 
   "promotion": {
     "P1_TO_P2": {
-      "consecutive_months": 3, "consecutive_min_score": 80,
-      "average_months": 3,     "average_min_score": 90,
-      "behavior_status_allowed": ["OK"],
-      "min_long_term_rate": null, "required_checks": []
+      "consecutiveMonths": 3, "consecutiveMinScore": 80,
+      "averageMonths": 3,     "averageMinScore": 90,
+      "behaviorStatusAllowed": ["OK"],
+      "minLongTermRate": null, "requiredChecks": []
     },
     "P2_TO_P3": {
-      "consecutive_months": 3, "consecutive_min_score": 90,
-      "average_months": 3,     "average_min_score": 100,
-      "behavior_status_allowed": ["OK"],
-      "min_long_term_rate": 0.90,
-      "required_checks": [{ "code": "SENIOR_ACTIVITY", "required_count": 2 }]
+      "consecutiveMonths": 3, "consecutiveMinScore": 90,
+      "averageMonths": 3,     "averageMinScore": 100,
+      "behaviorStatusAllowed": ["OK"],
+      "minLongTermRate": 0.90,
+      "requiredChecks": [{ "code": "SENIOR_ACTIVITY", "requiredCount": 2 }]
     },
     "P3_TO_P4": {
-      "consecutive_months": 3, "consecutive_min_score": 100,
-      "average_months": 3,     "average_min_score": 105,
-      "behavior_status_allowed": ["OK"],
-      "min_long_term_rate": 0.90,
-      "required_checks": [{ "code": "OWN_BUSINESS_RESULT", "required_count": 1 }],
-      "requires_admin_approval": true   // P4は必ずADMIN最終承認 (仕様19章)
+      "consecutiveMonths": 3, "consecutiveMinScore": 100,
+      "averageMonths": 3,     "averageMinScore": 105,
+      "behaviorStatusAllowed": ["OK"],
+      "minLongTermRate": 0.90,
+      "requiredChecks": [{ "code": "OWN_BUSINESS_RESULT", "requiredCount": 1 }],
+      "requiresAdminApproval": true   // P4は必ずADMIN最終承認 (仕様19章)
     }
   },
 
-  "lesson_unit_price": { "P1": 0, "P2": 10000, "P3": 12000, "P4": 15000 }
+  "lessonUnitPrice": { "P1": 0, "P2": 10000, "P3": 12000, "P4": 15000 }
 }
 ```
 
 > 数値は全てここにある。**コード中に閾値リテラルを書かない (magic number禁止)**。
+> 実装は `src/domain/evaluation/rules.ts` の `DEFAULT_EVALUATION_RULES` と
+> `supabase/migrations/*_master_data.sql` の v1 レコードに同じ内容が入っており、
+> Zod スキーマ (`evaluationRulesSchema`) で形式を検証している。
 
 ---
 
@@ -110,12 +112,12 @@ function isLongTermEligible(customer, asOfMonthEnd, rules): boolean {
   if (customer.goalApprovalStatus !== 'APPROVED') return false;      // 未承認は対象外
   if (customer.status === 'SUSPENDED') return false;
   if (customer.status === 'CANCELLED'
-      && !rules.eligibility.include_cancelled_reason_codes
+      && !rules.eligibility.includeCancelledReasonCodes
               .includes(customer.cancelReasonCode)) return false;
 
   const elapsed = elapsedMonths(customer.programStartDate, asOfMonthEnd,
-                                { excludeSuspendedPeriods: !rules.eligibility.count_suspended_months });
-  return elapsed >= rules.eligibility.min_elapsed_months;            // 既定=4
+                                { excludeSuspendedPeriods: !rules.eligibility.countSuspendedMonths });
+  return elapsed >= rules.eligibility.minElapsedMonths;            // 既定=4
 }
 // 3ヶ月目 → false (Case 1) / 4ヶ月目 → true (Case 2)
 // プログラム終了(COMPLETED)後も true のまま → 終了後の達成が加算される (Case 3)
@@ -132,7 +134,7 @@ function judgeCompleteSuccess(record, goalAtThatDate, rules): boolean {
   switch (goal.goalType) {
     case 'SCORE':    return okScore;
     case 'DISTANCE': return okDistance;
-    case 'BOTH':     return rules.customer_success.both_goal_rule === 'ALL'
+    case 'BOTH':     return rules.customerSuccess.bothGoalRule === 'ALL'
                             ? (okScore && okDistance) : (okScore || okDistance);
   }
 }
@@ -151,7 +153,7 @@ function calcLongTerm(customers, asOfMonthEnd, rules) {
                                     && c.completeSuccessAt <= asOfMonthEnd);
   const rate = achieved.length / targets.length;
   return { rate, targetCount: targets.length, achievedCount: achieved.length,
-           score: interpolateScore(rate, rules.customer_success.long_term.anchors, 36),
+           score: interpolateScore(rate, rules.customerSuccess.longTerm.anchors, 36),
            evaluable: true };
 }
 // rate 0.90 → 30.0 (Case 4) / rate 1.00 → 36.0 (Case 5)
@@ -161,7 +163,7 @@ function calcLongTerm(customers, asOfMonthEnd, rules) {
 
 ```ts
 function calcShortTerm(customers, asOfMonthEnd, rules) {
-  const windowStart = startOfMonth(addMonths(asOfMonthEnd, -(rules.window_months - 1)));
+  const windowStart = startOfMonth(addMonths(asOfMonthEnd, -(rules.windowMonths - 1)));
 
   // 分母: 「この3ヶ月で成果を出すべきだった顧客」
   //   = 期間開始時点で評価対象かつ未達成 ＋ 期間中に新たに評価対象になった顧客
@@ -179,7 +181,7 @@ function calcShortTerm(customers, asOfMonthEnd, rules) {
                                     && c.completeSuccessAt <= asOfMonthEnd);
   const rate = achieved.length / targets.length;
   return { rate, targetCount: targets.length, achievedCount: achieved.length,
-           score: interpolateScore(rate, rules.customer_success.short_term.anchors, 24),
+           score: interpolateScore(rate, rules.customerSuccess.shortTerm.anchors, 24),
            evaluable: true };
 }
 // rate 0.90 → 20.0 (Case 6) / rate 1.00 → 24.0 (Case 7)
@@ -204,11 +206,11 @@ function calcSales(sales, period, rules) {
   const net = sales
     .filter(s => s.status === 'ACTIVE' && !s.deletedAt)
     .filter(s => s.product.isSalesScoreTarget)                       // 商品マスタで対象/対象外
-    .filter(s => rules.sales.include_coach_sns || s.acquisitionSource !== 'COACH_SNS')
+    .filter(s => rules.sales.includeCoachSns || s.acquisitionSource !== 'COACH_SNS')
     .filter(s => within(s.soldOn, period))
     .reduce((sum, s) => sum + (s.amount - (s.refundAmount ?? 0)), 0);
 
-  const anchors = rules.sales.score_basis === 'ROLLING_3M'
+  const anchors = rules.sales.scoreBasis === 'ROLLING_3M'
                 ? rules.sales.quarterly.anchors : rules.sales.monthly.anchors;
   return { amount: net, score: interpolateScore(net, anchors, rules.sales.max) };
 }
@@ -224,7 +226,7 @@ function calcProfessionalScore(customerSuccess, sales, rules) {
              reason: '評価対象顧客が0名のため算出不能' };
   }
   const score = round1(customerSuccess.score + sales.score);         // 上限120
-  return { score, band: bandOf(score, rules.score_bands), evaluable: true };
+  return { score, band: bandOf(score, rules.scoreBands), evaluable: true };
 }
 // 50 + 50 = 100 (Case 8) / 60 + 60 = 120 (Case 9)
 ```
@@ -236,7 +238,7 @@ function calcQuarterlyBonus(snapshots3m, rules) {
   const valid = snapshots3m.filter(s => s.isEvaluable);
   if (valid.length < 2) return { amount: 0, avg: null, status: 'EVALUATION_INSUFFICIENT' }; // Q5
   const avg = mean(valid.map(s => s.professionalScore));
-  const tier = [...rules.quarterly_bonus].reverse().find(t => avg >= t.min);
+  const tier = [...rules.quarterlyBonus].reverse().find(t => avg >= t.min);
   return { amount: tier.amount, avg, monthsUsed: valid.length };
 }
 // 3ヶ月平均 105 → 100,000円 (Case 10)
@@ -249,41 +251,41 @@ function evaluatePromotion(coach, snapshots, behaviorStatus, checks, rules) {
   const rule = rules.promotion[`${coach.rank}_TO_${nextRank(coach.rank)}`];
   if (!rule) return { eligible: false, reason: '最上位ランク' };
 
-  const recent = latestNSnapshots(snapshots, rule.consecutive_months);
+  const recent = latestNSnapshots(snapshots, rule.consecutiveMonths);
   const conditions = [
     { code: 'CONSECUTIVE',
-      label: `${rule.consecutive_months}ヶ月連続 Score ${rule.consecutive_min_score}以上`,
-      current: recent.filter(s => s.professionalScore >= rule.consecutive_min_score).length,
-      required: rule.consecutive_months,
-      met: recent.length === rule.consecutive_months
-        && recent.every(s => s.professionalScore >= rule.consecutive_min_score) },
+      label: `${rule.consecutiveMonths}ヶ月連続 Score ${rule.consecutiveMinScore}以上`,
+      current: recent.filter(s => s.professionalScore >= rule.consecutiveMinScore).length,
+      required: rule.consecutiveMonths,
+      met: recent.length === rule.consecutiveMonths
+        && recent.every(s => s.professionalScore >= rule.consecutiveMinScore) },
 
-    { code: 'AVERAGE', label: `${rule.average_months}ヶ月平均 ${rule.average_min_score}以上`,
+    { code: 'AVERAGE', label: `${rule.averageMonths}ヶ月平均 ${rule.averageMinScore}以上`,
       current: mean(recent.map(s => s.professionalScore)),
-      required: rule.average_min_score,
-      met: mean(recent.map(s => s.professionalScore)) >= rule.average_min_score },
+      required: rule.averageMinScore,
+      met: mean(recent.map(s => s.professionalScore)) >= rule.averageMinScore },
 
-    ...(rule.min_long_term_rate != null ? [{
-      code: 'LONG_TERM_RATE', label: `完全成果率 ${pct(rule.min_long_term_rate)}以上`,
+    ...(rule.minLongTermRate != null ? [{
+      code: 'LONG_TERM_RATE', label: `完全成果率 ${pct(rule.minLongTermRate)}以上`,
       current: latest(snapshots).longTermSuccessRate,
-      required: rule.min_long_term_rate,
-      met: (latest(snapshots).longTermSuccessRate ?? 0) >= rule.min_long_term_rate }] : []),
+      required: rule.minLongTermRate,
+      met: (latest(snapshots).longTermSuccessRate ?? 0) >= rule.minLongTermRate }] : []),
 
     { code: 'BEHAVIOR', label: 'EAGLE行動ルール',
       current: behaviorStatus, required: 'OK',
-      met: rule.behavior_status_allowed.includes(behaviorStatus) },   // NGなら昇格不可 (仕様20章)
+      met: rule.behaviorStatusAllowed.includes(behaviorStatus) },   // NGなら昇格不可 (仕様20章)
 
-    ...rule.required_checks.map(rc => ({
+    ...rule.requiredChecks.map(rc => ({
       code: rc.code, label: requirementLabel(rc.code),
-      current: checks[rc.code]?.achievedCount ?? 0, required: rc.required_count,
-      met: (checks[rc.code]?.achievedCount ?? 0) >= rc.required_count })),
+      current: checks[rc.code]?.achievedCount ?? 0, required: rc.requiredCount,
+      met: (checks[rc.code]?.achievedCount ?? 0) >= rc.requiredCount })),
   ];
 
   const allMet = conditions.every(c => c.met);
   return {
     conditions,                                    // ← 画面で「何が足りないか」をそのまま表示
     status: !allMet ? 'NOT_ELIGIBLE'
-          : rule.requires_admin_approval ? 'CANDIDATE_REQUIRES_APPROVAL' : 'CANDIDATE',
+          : rule.requiresAdminApproval ? 'CANDIDATE_REQUIRES_APPROVAL' : 'CANDIDATE',
     shortfalls: conditions.filter(c => !c.met),
   };
 }
@@ -307,7 +309,7 @@ function customersNeededFor(targetRate: number, achieved: number, total: number)
 
 ```ts
 monthlyEstimate =
-    (lessonCount ?? 0) * rules.lesson_unit_price[coach.rank]     // レッスン数未入力なら非表示
+    (lessonCount ?? 0) * rules.lessonUnitPrice[coach.rank]     // レッスン数未入力なら非表示
   + sum(activeSales.map(s => s.incentiveAmount))                 // 成約ショットインセン
   + (isQuarterEndMonth ? quarterlyBonus.amount : 0);             // 四半期ボーナス
 // 画面には必ず「参考値 / 実際の給与計算とは分離」と明示する

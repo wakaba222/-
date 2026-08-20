@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getSessionContext } from '@/server/auth';
-import { buildAdminCoachRows } from '@/server/services/adminOverviewService';
+import { buildAdminCoachRows, loadAdminCoaches } from '@/server/services/adminOverviewService';
 import { buildCustomerViews, CUSTOMER_VIEW_COLUMNS } from '@/server/services/customerViewService';
 import { loadEvaluationRules } from '@/server/repositories/evaluationRepository';
 import { currentYearMonth } from '@/server/services/evaluationService';
-import { loadAdminCoaches } from '@/server/services/adminOverviewService';
 import type { CustomerRow, SaleRow } from '@/lib/supabase/types';
 
 type ExportType = 'coaches' | 'customers' | 'sales';
