@@ -90,6 +90,15 @@ export function SaleForm({
         </Select>
       </Field>
 
+      <Field label="入金経路" hint="銀行振込は入金確認後に登録してください">
+        <Select name="paymentSource" defaultValue="MANUAL">
+          <option value="ROBOT_PAYMENT">Robot Payment</option>
+          <option value="MOSH">MOSH</option>
+          <option value="BANK_TRANSFER">銀行振込</option>
+          <option value="MANUAL">その他・手入力</option>
+        </Select>
+      </Field>
+
       <Field label="備考" hint="任意">
         <TextArea name="note" rows={2} />
       </Field>

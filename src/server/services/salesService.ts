@@ -1,4 +1,4 @@
-import type { AcquisitionSource, DateOnly } from '@/domain/types';
+import type { AcquisitionSource, DateOnly, PaymentSource } from '@/domain/types';
 import type { Db } from '@/server/repositories/evaluationRepository';
 import type { ProductRow } from '@/lib/supabase/types';
 
@@ -9,6 +9,7 @@ export interface RegisterSaleInput {
   soldOn: DateOnly;
   amount: number;
   acquisitionSource: AcquisitionSource;
+  paymentSource: PaymentSource;
   note: string | null;
   createdBy: string;
 }
@@ -46,6 +47,7 @@ export async function registerSale(db: Db, input: RegisterSaleInput): Promise<Re
       amount: input.amount,
       incentive_amount: product.incentive_amount,
       acquisition_source: input.acquisitionSource,
+      payment_source: input.paymentSource,
       note: input.note,
       created_by: input.createdBy,
     })

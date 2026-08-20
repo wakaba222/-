@@ -1,19 +1,19 @@
 import { formatScore } from '@/lib/format';
 import { cn } from '@/lib/cn';
 
-/** Professional Score の最大値 (仕様16章) */
-const MAX_SCORE = 120;
-
 export function ScoreDisplay({
   score,
   band,
   reason,
+  max,
 }: {
   score: number | null;
   band: string;
   reason?: string | null;
+  /** 満点。評価ルールから算出した値を渡す (コードに120を持たない) */
+  max: number;
 }) {
-  const ratio = score === null ? 0 : Math.min(score / MAX_SCORE, 1);
+  const ratio = score === null || max <= 0 ? 0 : Math.min(score / max, 1);
 
   return (
     <div>
@@ -21,7 +21,7 @@ export function ScoreDisplay({
         <span className={cn('tabular text-6xl font-bold leading-none tracking-tight', score === null ? 'text-ink-300' : 'text-white')}>
           {formatScore(score)}
         </span>
-        <span className="pb-1.5 text-sm text-eagle-100">/ {MAX_SCORE}</span>
+        <span className="pb-1.5 text-sm text-eagle-100">/ {max}</span>
       </div>
       <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/15">
         <div className="h-full rounded-full bg-gold-500 transition-[width]" style={{ width: `${ratio * 100}%` }} />

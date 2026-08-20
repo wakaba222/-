@@ -8,7 +8,6 @@ import type { CoachWithUserRow, EvaluationSnapshotRow } from '@/lib/supabase/typ
 const EVALUATION_WINDOW_MONTHS = 3;
 /** 評価対象なのに成果更新が滞っている顧客を検知する日数 */
 const STALE_CUSTOMER_DAYS = 60;
-const LONG_TERM_TARGET_RATE = 0.9;
 /** 「あと少しで90%」を通知する残り人数のしきい値 */
 const NEAR_TARGET_REMAINING = 2;
 
@@ -240,7 +239,7 @@ async function createNotifications(
     notifications.push({
       user_id: coach.userId,
       type: 'NEAR_LONG_TERM_TARGET',
-      title: `完全成果率${Math.round(LONG_TERM_TARGET_RATE * 100)}%まであと${overview.customersNeededForTarget}名です`,
+      title: `完全成果率${Math.round(overview.targetRate * 100)}%まであと${overview.customersNeededForTarget}名です`,
       body: `現在 ${longTerm.achievedCount}/${longTerm.targetCount}名。あと${overview.customersNeededForTarget}名の達成で基準に到達します。`,
       link_url: '/coach/customers',
       dedupe_key: `NEAR_LONG_TERM_TARGET:${yearMonth}`,

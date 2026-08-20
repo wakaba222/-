@@ -5,6 +5,7 @@
  */
 import type {
   AcquisitionSource,
+  PaymentSource,
   BehaviorStatus,
   CancelReasonCode,
   CustomerStatus,
@@ -106,8 +107,13 @@ export interface SaleRow {
   amount: number;
   incentive_amount: number;
   acquisition_source: AcquisitionSource;
+  payment_source: PaymentSource;
   status: SaleStatus;
   refund_amount: number;
+  tax_amount: number;
+  payment_fee: number;
+  /** 生成列: 売価 − 税 − 決済手数料 − 返金 */
+  net_amount: number;
   note: string | null;
   products?: Pick<ProductRow, 'id' | 'name' | 'code' | 'is_sales_score_target'> | null;
   customers?: Pick<CustomerRow, 'id' | 'name'> | null;

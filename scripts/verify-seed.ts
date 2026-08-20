@@ -77,8 +77,8 @@ async function main(): Promise<void> {
     }));
 
     const saleRows = await client.query(
-      `select s.id, s.coach_id, s.sold_on, s.amount, s.refund_amount, s.incentive_amount, s.status,
-              s.acquisition_source, p.is_sales_score_target
+      `select s.id, s.coach_id, s.sold_on, s.amount, s.refund_amount, s.tax_amount, s.payment_fee,
+              s.incentive_amount, s.payment_source, s.status, s.acquisition_source, p.is_sales_score_target
          from sales s join products p on p.id = s.product_id
         where s.coach_id = $1 and s.deleted_at is null`,
       [coach.id],
@@ -90,7 +90,10 @@ async function main(): Promise<void> {
       soldOn: toDateOnly(row.sold_on)!,
       amount: Number(row.amount),
       refundAmount: Number(row.refund_amount),
+      taxAmount: Number(row.tax_amount ?? 0),
+      paymentFee: Number(row.payment_fee ?? 0),
       incentiveAmount: Number(row.incentive_amount),
+      paymentSource: row.payment_source ?? 'MANUAL',
       status: row.status,
       acquisitionSource: row.acquisition_source,
       isSalesScoreTarget: row.is_sales_score_target,

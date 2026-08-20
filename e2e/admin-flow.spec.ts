@@ -4,7 +4,7 @@ import { ADMIN_EMAIL, login, SCREENSHOT_DIR } from './helpers';
 test.describe('ADMIN画面', () => {
   test.skip(({ isMobile }) => isMobile === true, 'ADMIN画面はPC利用が前提');
 
-  test('全コーチの比較表が表示される', async ({ page }, testInfo) => {
+  test('全コーチの比較表が表示される', async ({ page }) => {
     await login(page, ADMIN_EMAIL);
     await expect(page).toHaveURL(/\/admin/);
 
@@ -20,7 +20,29 @@ test.describe('ADMIN画面', () => {
     await page.screenshot({ path: `${SCREENSHOT_DIR}/admin-dashboard.png`, fullPage: true });
   });
 
-  test('顧客一覧・目標承認・昇格審査・月次締めの各画面が開ける', async ({ page }, testInfo) => {
+  test('コーチ一覧の並び替えと絞り込みが動く', async ({ page }) => {
+    await login(page, ADMIN_EMAIL);
+
+    const firstCoachCell = page.locator('tbody tr').first().locator('td').first();
+    const topByScore = await firstCoachCell.innerText();
+
+    // Score 見出しを押すと昇順になり、先頭が入れ替わる
+    await page.getByRole('button', { name: /Score/ }).click();
+    await expect(firstCoachCell).not.toHaveText(topByScore);
+
+    // ランクで絞り込むと該当者だけになる
+    await page.getByRole('combobox').selectOption('P2');
+    await expect(page.locator('tbody tr')).toHaveCount(1);
+    await expect(page.getByText('1名を表示')).toBeVisible();
+
+    // 名前での絞り込み
+    await page.getByRole('combobox').selectOption('ALL');
+    await page.getByPlaceholder('コーチ名で絞り込み').fill('鈴木');
+    await expect(page.locator('tbody tr')).toHaveCount(1);
+    await expect(page.locator('tbody tr').first()).toContainText('鈴木');
+  });
+
+  test('顧客一覧・目標承認・昇格審査・月次締めの各画面が開ける', async ({ page }) => {
     await login(page, ADMIN_EMAIL);
 
     await page.goto('/admin/customers');

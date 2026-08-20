@@ -6,6 +6,7 @@ import { buildCustomerViews, CUSTOMER_VIEW_COLUMNS } from '@/server/services/cus
 import { loadEvaluationRules } from '@/server/repositories/evaluationRepository';
 import { currentYearMonth } from '@/server/services/evaluationService';
 import type { CustomerRow, SaleRow } from '@/lib/supabase/types';
+import { formatRate, formatScore } from '@/lib/format';
 
 type ExportType = 'coaches' | 'customers' | 'sales';
 
@@ -37,14 +38,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ typ
       const rows = await buildAdminCoachRows(supabase, yearMonth);
       csv = toCsv(
         ['コーチ名', 'ランク', 'Professional Score', '区分', '顧客成果点', '完全成果率', '短期成果率', '今月売上', '3ヶ月売上', '年間売上', '担当顧客数', '評価対象数', '完全達成数', '昇格status', '行動ルール'],
+        // 画面と同じ整形で出す (CSVとダッシュボードで数字の見え方が変わらないようにする)
         rows.map((row) => [
           row.name,
           row.level,
-          row.professionalScore,
+          formatScore(row.professionalScore),
           row.scoreBand,
-          row.customerSuccessScore,
-          row.longTermRate,
-          row.shortTermRate,
+          formatScore(row.customerSuccessScore),
+          formatRate(row.longTermRate),
+          formatRate(row.shortTermRate),
           row.monthlySales,
           row.quarterlySales,
           row.annualSales,
@@ -87,7 +89,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ typ
       const [{ data }, coaches] = await Promise.all([
         supabase
           .from('sales')
-          .select('id, coach_id, customer_id, product_id, sold_on, amount, incentive_amount, acquisition_source, status, refund_amount, note, products(id, name, code, is_sales_score_target), customers(id, name)')
+          .select('id, coach_id, customer_id, product_id, sold_on, amount, incentive_amount, acquisition_source, payment_source, status, refund_amount, tax_amount, payment_fee, net_amount, note, products(id, name, code, is_sales_score_target), customers(id, name)')
           .is('deleted_at', null)
           .order('sold_on', { ascending: false })
           .returns<SaleRow[]>(),
@@ -95,16 +97,21 @@ export async function GET(_request: Request, { params }: { params: Promise<{ typ
       ]);
       const coachNames = new Map(coaches.map((c) => [c.id, c.users?.name ?? '']));
       csv = toCsv(
-        ['成約日', 'コーチ', '顧客', '商品', '金額', '返金額', 'インセンティブ', '獲得経路', '状態', '評価対象商品'],
+        ['成約日', 'コーチ', '顧客', '商品', '売価', '消費税', '決済手数料', '返金額', '純額',
+         'インセンティブ', '獲得経路', '入金経路', '状態', '評価対象商品'],
         (data ?? []).map((sale) => [
           sale.sold_on,
           coachNames.get(sale.coach_id) ?? '',
           sale.customers?.name ?? '',
           sale.products?.name ?? '',
           sale.amount,
+          sale.tax_amount,
+          sale.payment_fee,
           sale.refund_amount,
+          sale.net_amount,
           sale.incentive_amount,
           sale.acquisition_source,
+          sale.payment_source,
           sale.status,
           sale.products?.is_sales_score_target ? '対象' : '対象外',
         ]),

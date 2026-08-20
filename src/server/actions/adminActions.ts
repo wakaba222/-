@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { addMonthsToYearMonth, isDateOnly, todayInJst, yearMonthOf } from '@/domain/date';
 import { evaluationRulesSchema } from '@/domain/evaluation';
+import { loadEvaluationRules } from '@/server/repositories/evaluationRepository';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/server/auth';
 import { fail, ok, type ActionResult } from '@/server/actionResult';
@@ -347,12 +348,15 @@ export async function decidePromotionAction(_prev: ActionResult | null, formData
     .eq('id', parsed.data.reviewId);
   if (error) return fail(`昇格判定の更新に失敗しました: ${error.message}`);
 
-  // 承認時のみランクを実際に更新する。単価もランクの標準値に合わせる
+  // 承認時のみランクを実際に更新する。単価は評価ルールのランク別単価に合わせる
   if (parsed.data.decision === 'APPROVED' && review.to_level) {
-    const unitPrice: Record<string, number> = { P1: 0, P2: 10000, P3: 12000, P4: 15000 };
+    const rules = await loadEvaluationRules(supabase, { yearMonth: yearMonthOf(todayInJst()) });
     const { error: levelError } = await supabase
       .from('coaches')
-      .update({ professional_level: review.to_level, lesson_unit_price: unitPrice[review.to_level] ?? 0 })
+      .update({
+        professional_level: review.to_level,
+        lesson_unit_price: rules.lessonUnitPrice[review.to_level],
+      })
       .eq('id', review.coach_id);
     if (levelError) return fail(`ランクの更新に失敗しました: ${levelError.message}`);
   }

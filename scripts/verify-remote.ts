@@ -236,6 +236,91 @@ async function main(): Promise<void> {
     '昇格候補は田中 健一 (P2 → P3)',
   );
 
+  // --------------------------------------------- 7. 評価ルール変更に対する不変性
+  console.log('\n[7] 評価ルール変更に対する過去評価の不変性');
+  const pastMonth = targetMonths[0]!;
+  const { data: beforeRows } = await service
+    .from('latest_evaluation_snapshots')
+    .select('coach_id, revision, professional_score, evaluation_rule_version')
+    .eq('year_month', pastMonth);
+  const beforeSnapshot = (beforeRows ?? [])[0];
+
+  const { data: latestRule } = await service
+    .from('evaluation_rules')
+    .select('version, rules')
+    .order('version', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const newVersion = (latestRule?.version ?? 1) + 1;
+
+  // 過去日付で有効になる新ルールを作る (配点を意図的に変える)
+  const changedRules = JSON.parse(JSON.stringify(latestRule?.rules ?? {}));
+  changedRules.version = newVersion;
+  changedRules.customerSuccess.longTerm.anchors = [[0, 0], [0.9, 36], [1, 36]];
+  const { error: ruleError } = await service.from('evaluation_rules').insert({
+    version: newVersion,
+    effective_from: '2026-01-01',
+    rules: changedRules,
+    note: '[検証用] 過去評価が再計算されないことの確認',
+  });
+  check(ruleError === null, '新しい評価ルールversionを登録できる', ruleError?.message ?? `v${newVersion}`);
+
+  const { data: afterRuleChange } = await service
+    .from('latest_evaluation_snapshots')
+    .select('coach_id, revision, professional_score, evaluation_rule_version')
+    .eq('year_month', pastMonth)
+    .eq('coach_id', beforeSnapshot?.coach_id ?? '')
+    .maybeSingle();
+  check(
+    afterRuleChange?.professional_score === beforeSnapshot?.professional_score &&
+      afterRuleChange?.evaluation_rule_version === beforeSnapshot?.evaluation_rule_version,
+    'ルールを変えても確定済みスナップショットは自動で再計算されない',
+    `Score ${beforeSnapshot?.professional_score} / v${beforeSnapshot?.evaluation_rule_version} のまま`,
+  );
+
+  // ADMIN が明示的に再締めした場合は、新しい revision として追加される
+  await closeMonth(service, pastMonth);
+  const { data: reclosed } = await service
+    .from('evaluation_snapshots')
+    .select('revision, professional_score, evaluation_rule_version')
+    .eq('year_month', pastMonth)
+    .eq('coach_id', beforeSnapshot?.coach_id ?? '')
+    .order('revision', { ascending: true });
+
+  const original = (reclosed ?? []).find((r) => r.revision === beforeSnapshot?.revision);
+  const added = (reclosed ?? []).find((r) => r.revision === (beforeSnapshot?.revision ?? 0) + 1);
+  check(
+    original?.professional_score === beforeSnapshot?.professional_score &&
+      original?.evaluation_rule_version === beforeSnapshot?.evaluation_rule_version,
+    '再締めしても過去の revision は書き換わらない',
+    `rev${original?.revision}: Score ${original?.professional_score} / v${original?.evaluation_rule_version}`,
+  );
+  check(
+    added !== undefined && added.evaluation_rule_version === newVersion,
+    '再締めは新しい revision として、変更後のルールで記録される',
+    added ? `rev${added.revision}: Score ${added.professional_score} / v${added.evaluation_rule_version}` : '追加なし',
+  );
+
+  // 検証用に作ったルールと revision を片付ける
+  await service
+    .from('evaluation_snapshots')
+    .delete()
+    .eq('year_month', pastMonth)
+    .gt('revision', beforeSnapshot?.revision ?? 0);
+  await service.from('evaluation_rules').delete().eq('version', newVersion);
+  const { data: restored } = await service
+    .from('latest_evaluation_snapshots')
+    .select('revision, professional_score, evaluation_rule_version')
+    .eq('year_month', pastMonth)
+    .eq('coach_id', beforeSnapshot?.coach_id ?? '')
+    .maybeSingle();
+  check(
+    restored?.revision === beforeSnapshot?.revision &&
+      restored?.professional_score === beforeSnapshot?.professional_score,
+    '検証用データを片付け、元の状態に戻した',
+    `rev${restored?.revision} / Score ${restored?.professional_score}`,
+  );
+
   // --------------------------------------------------------------- 結果
   console.log(`\n${'='.repeat(60)}`);
   if (failures > 0) {

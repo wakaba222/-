@@ -58,7 +58,10 @@ function sale(overrides: Partial<SaleEvaluationInput> = {}): SaleEvaluationInput
     soldOn: '2026-05-10',
     amount: 498_000,
     refundAmount: 0,
+    taxAmount: 0,
+    paymentFee: 0,
     incentiveAmount: 10_000,
+    paymentSource: 'MANUAL',
     status: 'ACTIVE',
     acquisitionSource: 'EXISTING',
     isSalesScoreTarget: true,
@@ -244,6 +247,16 @@ describe('Case 11: 成約ショットインセンティブ', () => {
 
   it('キャンセルされた売上のインセンティブは加算しない', () => {
     const list = [sale({ incentiveAmount: 50_000, status: 'CANCELLED' })];
+    expect(aggregateSales(list, monthPeriod('2026-05'), RULES).incentiveTotal).toBe(0);
+  });
+
+  it('一部返金では成約インセンティブを維持する', () => {
+    const list = [sale({ amount: 2_000_000, refundAmount: 500_000, incentiveAmount: 50_000, status: 'REFUNDED' })];
+    expect(aggregateSales(list, monthPeriod('2026-05'), RULES).incentiveTotal).toBe(50_000);
+  });
+
+  it('全額返金では成約インセンティブを支給しない', () => {
+    const list = [sale({ amount: 2_000_000, refundAmount: 2_000_000, incentiveAmount: 50_000, status: 'REFUNDED' })];
     expect(aggregateSales(list, monthPeriod('2026-05'), RULES).incentiveTotal).toBe(0);
   });
 });

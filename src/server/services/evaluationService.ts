@@ -7,6 +7,7 @@ import {
   evaluatePromotion,
   monthPeriod,
   rollingPeriod,
+  standardRateOf,
   yearToDatePeriod,
   type CompensationEstimate,
   type EvaluationRules,
@@ -32,8 +33,6 @@ import {
 } from '@/server/repositories/evaluationRepository';
 import type { BehaviorStatusRow, LessonCountRow, RequirementCheckRow } from '@/lib/supabase/types';
 
-/** 長期成果率の到達目標。ダッシュボードの「あと○名」表示の基準 */
-const LONG_TERM_TARGET_RATE = 0.9;
 /** 昇格・ボーナス判定に使う月数 */
 const EVALUATION_WINDOW_MONTHS = 3;
 /** ダッシュボードの推移グラフに出す月数 */
@@ -110,6 +109,8 @@ export async function getCoachOverview(
   ]);
 
   const evaluation = evaluateCoachMonth({ coachId, level, yearMonth, customers, sales }, rules);
+  // 「あと○名で90%」の基準はルールのアンカーから導出する (コードに閾値を持たない)
+  const targetRate = standardRateOf(rules.customerSuccess.longTerm.anchors);
 
   const monthly = aggregateSales(sales, monthPeriod(yearMonth), rules);
   const quarterly = aggregateSales(sales, rollingPeriod(yearMonth, EVALUATION_WINDOW_MONTHS), rules);
@@ -158,11 +159,11 @@ export async function getCoachOverview(
     compensation,
     behaviorStatus,
     customersNeededForTarget: countNeededForRate(
-      LONG_TERM_TARGET_RATE,
+      targetRate,
       evaluation.customerSuccess.longTerm.achievedCount,
       evaluation.customerSuccess.longTerm.targetCount,
     ),
-    targetRate: LONG_TERM_TARGET_RATE,
+    targetRate,
     customers,
     sales,
   };

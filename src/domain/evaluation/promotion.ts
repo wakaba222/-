@@ -57,11 +57,15 @@ export function evaluatePromotion(input: PromotionInput, rules: EvaluationRules)
   }
 
   const ascending = [...snapshots].sort((a, b) => a.yearMonth.localeCompare(b.yearMonth));
-  const consecutiveWindow = ascending.slice(-rule.consecutiveMonths);
-  const averageWindow = ascending.slice(-rule.averageMonths);
+
+  // 評価対象0名などで N/A になった月は、連続カウントを「中断」する (仕様6章)。
+  // 未達として扱って連続を切ることも、クリアとして数えることもしない。
+  const evaluable = ascending.filter((s) => s.isEvaluable && s.professionalScore !== null);
+  const consecutiveWindow = evaluable.slice(-rule.consecutiveMonths);
+  const averageWindow = evaluable.slice(-rule.averageMonths);
 
   const consecutiveCleared = consecutiveWindow.filter(
-    (s) => s.isEvaluable && (s.professionalScore ?? 0) >= rule.consecutiveMinScore,
+    (s) => (s.professionalScore ?? 0) >= rule.consecutiveMinScore,
   ).length;
   const consecutiveMet =
     consecutiveWindow.length === rule.consecutiveMonths && consecutiveCleared === rule.consecutiveMonths;
@@ -70,7 +74,8 @@ export function evaluatePromotion(input: PromotionInput, rules: EvaluationRules)
   const averageMet =
     averageWindow.length === rule.averageMonths && average !== null && average >= rule.averageMinScore;
 
-  const latest = ascending[ascending.length - 1];
+  // 完全成果率も評価可能な直近月の値を見る
+  const latest = evaluable[evaluable.length - 1] ?? ascending[ascending.length - 1];
   const longTermRate = latest?.longTermSuccessRate ?? null;
 
   const conditions: PromotionCondition[] = [

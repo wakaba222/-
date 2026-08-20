@@ -12,6 +12,7 @@ export type CustomerStatus = 'ACTIVE' | 'SUSPENDED' | 'COMPLETED' | 'CANCELLED';
 export type CancelReasonCode = 'SELF' | 'PERFORMANCE' | 'OTHER';
 
 export type AcquisitionSource = 'EXISTING' | 'COACH_SNS' | 'COMPANY' | 'OTHER';
+export type PaymentSource = 'ROBOT_PAYMENT' | 'MOSH' | 'BANK_TRANSFER' | 'MANUAL';
 export type SaleStatus = 'ACTIVE' | 'CANCELLED' | 'REFUNDED';
 
 export const PROFESSIONAL_LEVELS: readonly ProfessionalLevel[] = ['P1', 'P2', 'P3', 'P4'];
@@ -53,9 +54,15 @@ export interface SaleEvaluationInput {
   id: string;
   coachId: string;
   soldOn: DateOnly;
+  /** 売価 (gross)。売上点のアンカーはこの水準を前提に設計されている */
   amount: number;
   refundAmount: number;
+  /** 消費税額。税抜運用なら0 */
+  taxAmount: number;
+  /** 決済手数料 */
+  paymentFee: number;
   incentiveAmount: number;
+  paymentSource: PaymentSource;
   status: SaleStatus;
   acquisitionSource: AcquisitionSource;
   /** 商品マスタの「売上点の評価対象か」フラグ */
@@ -97,10 +104,12 @@ export interface CustomerSuccessResult {
 }
 
 export interface SalesResult {
-  /** 評価対象の純売上額 (返金相殺後) */
+  /** 売上点の算定に使った金額 (既定は 売価 − 返金) */
   amount: number;
-  /** 評価対象外を含む総売上 (表示用) */
+  /** 評価対象外を含む総額 (表示用) */
   grossAmount: number;
+  /** 税・決済手数料・返金を差し引いた純額 (報酬計算・分析の参照用) */
+  netAmount: number;
   /** SNS経由売上 (既定では評価対象外。別枠表示用) */
   coachSnsAmount: number;
   incentiveTotal: number;

@@ -21,7 +21,7 @@ export default async function AdminSalesPage() {
   const [{ data: sales }, coaches] = await Promise.all([
     supabase
       .from('sales')
-      .select('id, coach_id, customer_id, product_id, sold_on, amount, incentive_amount, acquisition_source, status, refund_amount, note, products(id, name, code, is_sales_score_target), customers(id, name)')
+      .select('id, coach_id, customer_id, product_id, sold_on, amount, incentive_amount, acquisition_source, payment_source, status, refund_amount, tax_amount, payment_fee, net_amount, note, products(id, name, code, is_sales_score_target), customers(id, name)')
       .is('deleted_at', null)
       .order('sold_on', { ascending: false })
       .limit(100)

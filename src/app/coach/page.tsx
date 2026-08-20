@@ -4,6 +4,7 @@ import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { ConditionList } from '@/components/ConditionList';
 import { ScoreDisplay, SubScoreBar } from '@/components/ScoreDisplay';
+import { maxProfessionalScore } from '@/domain/evaluation';
 import { NotificationList } from '@/components/NotificationList';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { requireCoach } from '@/server/auth';
@@ -43,7 +44,12 @@ export default async function CoachDashboardPage() {
         </div>
         <div className="mt-5">
           <p className="text-xs text-eagle-100">Professional Score</p>
-          <ScoreDisplay score={professional.score} band={professional.band} reason={professional.reason} />
+          <ScoreDisplay
+            score={professional.score}
+            band={professional.band}
+            reason={professional.reason}
+            max={maxProfessionalScore(overview.rules)}
+          />
         </div>
       </section>
 

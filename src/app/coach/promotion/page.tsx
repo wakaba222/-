@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { ConditionList } from '@/components/ConditionList';
 import { ScoreTrend } from '@/components/ScoreTrend';
+import { maxProfessionalScore } from '@/domain/evaluation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { requireCoach } from '@/server/auth';
 import { getCoachOverview } from '@/server/services/evaluationService';
@@ -49,7 +50,7 @@ export default async function CoachPromotionPage() {
       <Card>
         <CardHeader title="Professional Score 推移" description="確定済みスナップショット" />
         <CardBody>
-          <ScoreTrend snapshots={overview.snapshots} />
+          <ScoreTrend snapshots={overview.snapshots} max={maxProfessionalScore(overview.rules)} />
         </CardBody>
       </Card>
 

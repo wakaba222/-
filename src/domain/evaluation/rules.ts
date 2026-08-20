@@ -48,6 +48,18 @@ export const evaluationRulesSchema = z.object({
     includeCoachSns: z.boolean(),
     /** 月次スコアの算定基準。MONTHLY = 当月売上 / ROLLING_3M = 直近3ヶ月売上 */
     scoreBasis: z.enum(['MONTHLY', 'ROLLING_3M']),
+    /**
+     * 売上点に使う金額。
+     * GROSS_MINUS_REFUND = 売価 − 返金 (既定。アンカーは売価水準で設計されている)
+     * NET = さらに消費税・決済手数料を差し引いた純額
+     */
+    amountBasis: z.enum(['GROSS_MINUS_REFUND', 'NET']).default('GROSS_MINUS_REFUND'),
+    /**
+     * 返金が発生した売上の成約ショットインセンティブの扱い。
+     * KEEP_UNLESS_FULL = 全額返金でなければ支給を維持する (既定)
+     * FORFEIT          = 一部返金でも支給しない
+     */
+    incentiveOnRefund: z.enum(['KEEP_UNLESS_FULL', 'FORFEIT']).default('KEEP_UNLESS_FULL'),
     monthly: z.object({ anchors: anchorsSchema }),
     quarterly: z.object({ anchors: anchorsSchema }),
     annual: z.object({ anchors: anchorsSchema }),
@@ -128,6 +140,8 @@ export const DEFAULT_EVALUATION_RULES: EvaluationRules = {
   sales: {
     includeCoachSns: false,
     scoreBasis: 'MONTHLY',
+    amountBasis: 'GROSS_MINUS_REFUND',
+    incentiveOnRefund: 'KEEP_UNLESS_FULL',
     monthly: {
       anchors: [
         [0, 0],

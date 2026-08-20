@@ -25,7 +25,7 @@ export default async function NewSalePage() {
       .returns<Pick<CustomerRow, 'id' | 'name'>[]>(),
     supabase
       .from('sales')
-      .select('id, coach_id, customer_id, product_id, sold_on, amount, incentive_amount, acquisition_source, status, refund_amount, note, products(id, name, code, is_sales_score_target), customers(id, name)')
+      .select('id, coach_id, customer_id, product_id, sold_on, amount, incentive_amount, acquisition_source, payment_source, status, refund_amount, tax_amount, payment_fee, net_amount, note, products(id, name, code, is_sales_score_target), customers(id, name)')
       .eq('coach_id', session.coach.id)
       .order('sold_on', { ascending: false })
       .limit(5)

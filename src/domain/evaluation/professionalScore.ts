@@ -3,9 +3,26 @@ import { round1 } from './interpolate';
 import type { EvaluationRules } from './rules';
 
 export function bandOf(score: number, rules: EvaluationRules): string {
-  const band = rules.scoreBands.find((b) => score >= b.min && score <= b.max);
-  // 上限を超える場合は最上位区分に丸める (120点上限のため通常は発生しない)
-  return band?.label ?? rules.scoreBands[rules.scoreBands.length - 1]?.label ?? '';
+  // 下限の降順に見て、最初に該当した区分を採用する。
+  // 区分の境界に隙間があっても、スコアより上の区分が選ばれることはない。
+  const descending = [...rules.scoreBands].sort((a, b) => b.min - a.min);
+  const band = descending.find((b) => score >= b.min);
+  return band?.label ?? descending[descending.length - 1]?.label ?? '';
+}
+
+/** Professional Score の満点 (顧客成果の上限 + 売上の上限)。表示のスケールに使う */
+export function maxProfessionalScore(rules: EvaluationRules): number {
+  return rules.customerSuccess.longTerm.max + rules.customerSuccess.shortTerm.max + rules.sales.max;
+}
+
+/**
+ * 「通常期待水準」の達成率 (既定 90%)。
+ * アンカーの最大点の1つ手前を通常基準とみなす。
+ * ダッシュボードの「あと○名で90%」の逆算に使う。
+ */
+export function standardRateOf(anchors: readonly (readonly [number, number])[]): number {
+  const sorted = [...anchors].sort((a, b) => a[0] - b[0]);
+  return sorted[sorted.length - 2]?.[0] ?? sorted[sorted.length - 1]?.[0] ?? 0;
 }
 
 /**

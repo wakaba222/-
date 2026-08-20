@@ -81,7 +81,10 @@ function toSaleInput(row: SaleRow): SaleEvaluationInput {
     soldOn: row.sold_on,
     amount: row.amount,
     refundAmount: row.refund_amount,
+    taxAmount: row.tax_amount,
+    paymentFee: row.payment_fee,
     incentiveAmount: row.incentive_amount,
+    paymentSource: row.payment_source,
     status: row.status,
     acquisitionSource: row.acquisition_source,
     isSalesScoreTarget: row.products?.is_sales_score_target ?? true,
@@ -174,7 +177,8 @@ export async function loadEvaluationSales(
     .from('sales')
     .select(
       'id, coach_id, customer_id, product_id, sold_on, amount, incentive_amount, acquisition_source, ' +
-        'status, refund_amount, note, products(id, name, code, is_sales_score_target)',
+        'payment_source, status, refund_amount, tax_amount, payment_fee, net_amount, note, ' +
+        'products(id, name, code, is_sales_score_target)',
     )
     .eq('coach_id', coachId)
     .gte('sold_on', from)

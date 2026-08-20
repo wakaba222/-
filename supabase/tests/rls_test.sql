@@ -197,4 +197,35 @@ begin
   assert not app.judge_complete_success(null, null, 'SCORE', 100, null, 'ALL');
 end $$;
 
+-- ============================================================================
+-- 担当変更履歴 (仕様22章)
+-- 過去の担当を消さずに履歴として残せること、現担当は常に1人であることを確認する
+-- ============================================================================
+set role postgres;
+do $$
+declare v_customer uuid := '00000000-0000-0000-0000-0000000000d1';
+begin
+  -- 現担当を閉じずに新担当を追加することはできない
+  begin
+    insert into public.customer_coach_assignments (customer_id, coach_id, start_date)
+    values (v_customer, '00000000-0000-0000-0000-0000000000f2', current_date);
+    raise exception '現担当が2人になる登録が通ってしまった';
+  exception when unique_violation then
+    null; -- 期待どおり
+  end;
+
+  -- 正しい手順: 現担当を終了させてから新担当を追加する
+  update public.customer_coach_assignments set end_date = current_date
+   where customer_id = v_customer and end_date is null;
+  insert into public.customer_coach_assignments (customer_id, coach_id, start_date)
+  values (v_customer, '00000000-0000-0000-0000-0000000000f2', current_date);
+
+  -- 過去の担当履歴が残っていること
+  assert (select count(*) from public.customer_coach_assignments where customer_id = v_customer) = 2,
+    '担当変更で過去の履歴が失われた';
+  assert (select count(*) from public.customer_coach_assignments
+           where customer_id = v_customer and end_date is null) = 1,
+    '現担当が1人になっていない';
+end $$;
+
 select 'INTEGRITY TEST PASSED' as result;

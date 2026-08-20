@@ -81,6 +81,7 @@ const saleSchema = z.object({
   soldOn: dateOnly,
   amount: z.coerce.number().int().min(0, '金額を正しく入力してください'),
   acquisitionSource: z.enum(['EXISTING', 'COACH_SNS', 'COMPANY', 'OTHER']),
+  paymentSource: z.enum(['ROBOT_PAYMENT', 'MOSH', 'BANK_TRANSFER', 'MANUAL']),
   note: z.string().max(500).optional(),
 });
 
@@ -92,6 +93,7 @@ export async function createSaleAction(_prev: ActionResult | null, formData: For
     soldOn: formData.get('soldOn'),
     amount: formData.get('amount'),
     acquisitionSource: formData.get('acquisitionSource') ?? 'EXISTING',
+    paymentSource: formData.get('paymentSource') ?? 'MANUAL',
     note: formData.get('note') ?? '',
   });
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? '入力内容を確認してください');
@@ -105,6 +107,7 @@ export async function createSaleAction(_prev: ActionResult | null, formData: For
       soldOn: parsed.data.soldOn,
       amount: parsed.data.amount,
       acquisitionSource: parsed.data.acquisitionSource,
+      paymentSource: parsed.data.paymentSource,
       note: parsed.data.note?.trim() ? parsed.data.note : null,
       createdBy: session.user.id,
     });
