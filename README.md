@@ -145,6 +145,16 @@ ADMINが顧客を登録 → 目標を承認 → コーチが成果を登録
 月次締めは `/admin/close` から手動実行、または `/api/cron/monthly-close` を
 毎月1日に Vercel Cron から呼び出す (`vercel.json` に設定済み)。
 
+## 検証状況
+
+| 検証 | 手段 | 結果 |
+|---|---|---|
+| 評価ロジック | `npm test` | 60件通過 (必須13ケース + 異常系) |
+| 型・Lint・ビルド | `npm run typecheck` / `lint` / `build` | エラー0 |
+| スキーマ・RLS (ローカル) | `npm run db:local` | 通過 |
+| 実環境の通し検証 | `npm run verify:remote` | 18件通過 (認証・RLS・権限昇格防止・Score・スナップショット・昇格判定) |
+| 画面 (実ブラウザ) | `npm run e2e` | 10件通過 (デスクトップ7 / スマホ3) |
+
 ## 設計ドキュメント
 
 | ドキュメント | 内容 |

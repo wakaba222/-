@@ -35,20 +35,36 @@ test.describe('コーチ画面', () => {
     expect(target, '担当顧客が見つかりません').toBeTruthy();
     await select.selectOption({ label: target! });
 
-    await expect(page.getByText(/目標:/)).toBeVisible();
+    // 顧客の目標種別 (スコア / 飛距離 / 両方) によって入力欄が変わる
+    const goalText = await page.getByText(/目標:/).innerText();
+    const scoreTarget = goalText.match(/スコア\s+([\d.]+)/);
+    const distanceTarget = goalText.match(/([\d.]+)yd/);
+    expect(scoreTarget || distanceTarget, `目標が読み取れません: ${goalText}`).toBeTruthy();
+
+    const fields: { label: string; miss: string; hit: string }[] = [];
+    if (scoreTarget) {
+      // スコアは小さいほど良い
+      const value = Number(scoreTarget[1]);
+      fields.push({ label: 'スコア', miss: String(value + 30), hit: String(value - 2) });
+    }
+    if (distanceTarget) {
+      // 飛距離は大きいほど良い
+      const value = Number(distanceTarget[1]);
+      fields.push({ label: '飛距離 (yd)', miss: String(value - 30), hit: String(value + 5) });
+    }
 
     // 目標に届かない値では未達と表示される
-    await page.getByLabel('スコア').fill('130');
+    for (const field of fields) await page.getByLabel(field.label).fill(field.miss);
     await expect(page.getByText('まだ目標に届いていません')).toBeVisible();
 
-    // 目標を上回る値に変えると、保存前に達成判定が切り替わる
-    await page.getByLabel('スコア').fill('70');
+    // 目標を満たす値に変えると、保存前に達成判定が切り替わる
+    for (const field of fields) await page.getByLabel(field.label).fill(field.hit);
     await expect(page.getByText('🎉 目標達成')).toBeVisible();
     await page.screenshot({ path: `${SCREENSHOT_DIR}/coach-record-judge-${testInfo.project.name}.png`, fullPage: true });
 
     // 保存するのは未達の記録にとどめる。
     // 達成記録の保存経路は supabase/tests/rls_test.sql の整合性テストが担保している
-    await page.getByLabel('スコア').fill('130');
+    for (const field of fields) await page.getByLabel(field.label).fill(field.miss);
     await page.getByLabel('メモ').fill('[E2E検証] 自動テストによる登録');
     await page.getByRole('button', { name: '登録する' }).click();
     await expect(page.getByRole('status')).toContainText(/登録しました/);
