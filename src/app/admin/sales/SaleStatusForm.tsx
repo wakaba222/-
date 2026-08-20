@@ -6,9 +6,24 @@ import { TextInput } from '@/components/ui/Field';
 import { FormMessage } from '@/components/ui/FormMessage';
 import { INITIAL_ACTION_STATE } from '@/server/actionResult';
 import { updateSaleStatusAction } from '@/server/actions/adminActions';
+import type { SaleStatus } from '@/domain/types';
 
-export function SaleStatusForm({ saleId, maxAmount }: { saleId: string; maxAmount: number }) {
+export function SaleStatusForm({
+  saleId,
+  maxAmount,
+  status,
+}: {
+  saleId: string;
+  maxAmount: number;
+  status: SaleStatus;
+}) {
   const [state, formAction, isPending] = useActionState(updateSaleStatusAction, INITIAL_ACTION_STATE);
+
+  // 処理後は操作欄が消えるが、結果は残す。
+  // 何が起きたか分からないまま画面が変わらないようにするため。
+  if (status !== 'ACTIVE') {
+    return <FormMessage state={state} />;
+  }
 
   return (
     <div>

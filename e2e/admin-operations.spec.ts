@@ -27,7 +27,7 @@ test.describe('ADMINの修正操作', () => {
     const row = page.locator('tbody tr').filter({ hasText: '¥' + amount.toLocaleString('ja-JP') }).first();
     await expect(row).toBeVisible();
 
-    await row.getByRole('textbox', { name: '返金額' }).fill('100000');
+    await row.getByLabel('返金額').fill('100000');
     await row.getByRole('button', { name: '返金' }).click();
     await expect(page.getByRole('status').first()).toContainText('返金を登録しました');
 

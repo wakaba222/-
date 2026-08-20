@@ -81,7 +81,7 @@ export default async function AdminSalesPage() {
                         : `返金 ${formatYen(sale.refund_amount)}`}
                   </td>
                   <td className="py-2">
-                    {sale.status === 'ACTIVE' ? <SaleStatusForm saleId={sale.id} maxAmount={sale.amount} /> : null}
+                    <SaleStatusForm saleId={sale.id} maxAmount={sale.amount} status={sale.status} />
                   </td>
                 </tr>
               ))}
