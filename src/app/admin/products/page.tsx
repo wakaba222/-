@@ -9,7 +9,7 @@ export default async function ProductsPage() {
   const supabase = await createSupabaseServerClient();
   const { data: products } = await supabase
     .from('products')
-    .select('id, code, name, default_price, incentive_amount, is_sales_score_target, active, sort_order')
+    .select('id, code, name, default_price, incentive_amount, is_sales_score_target, active, sort_order, tax_rate, price_includes_tax')
     .order('sort_order')
     .returns<ProductRow[]>();
 

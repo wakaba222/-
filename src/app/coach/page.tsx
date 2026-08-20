@@ -66,7 +66,7 @@ export default async function CoachDashboardPage() {
             label="売上"
             score={sales.score}
             max={overview.rules.sales.max}
-            detail={`当月 ${formatYen(sales.amount)}`}
+            detail={`当月の税抜売上 ${formatYen(sales.amount)}`}
           />
         </CardBody>
       </Card>
@@ -115,7 +115,7 @@ export default async function CoachDashboardPage() {
       </div>
 
       <Card>
-        <CardHeader title="売上" description="評価対象商品の純額 (返金相殺後)" />
+        <CardHeader title="売上" description="評価対象商品の税抜売上 (返金の税抜相当額を控除)" />
         <CardBody>
           <dl className="grid grid-cols-3 gap-3 text-center">
             <SalesFigure label="今月" value={overview.salesBreakdown.monthly} />

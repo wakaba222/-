@@ -374,6 +374,8 @@ const productSchema = z.object({
   incentiveAmount: z.coerce.number().int().min(0),
   isSalesScoreTarget: z.enum(['true', 'false']),
   active: z.enum(['true', 'false']),
+  priceIncludesTax: z.enum(['true', 'false']),
+  taxRate: z.coerce.number().min(0).max(0.99),
 });
 
 export async function upsertProductAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
@@ -386,6 +388,8 @@ export async function upsertProductAction(_prev: ActionResult | null, formData: 
     incentiveAmount: formData.get('incentiveAmount'),
     isSalesScoreTarget: formData.get('isSalesScoreTarget') ?? 'true',
     active: formData.get('active') ?? 'true',
+    priceIncludesTax: formData.get('priceIncludesTax') ?? 'true',
+    taxRate: formData.get('taxRate') ?? 0.1,
   });
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? '入力内容を確認してください');
 
@@ -397,6 +401,8 @@ export async function upsertProductAction(_prev: ActionResult | null, formData: 
     incentive_amount: parsed.data.incentiveAmount,
     is_sales_score_target: parsed.data.isSalesScoreTarget === 'true',
     active: parsed.data.active === 'true',
+    price_includes_tax: parsed.data.priceIncludesTax === 'true',
+    tax_rate: parsed.data.taxRate,
   };
 
   const { error } = parsed.data.id

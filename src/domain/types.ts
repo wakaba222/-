@@ -104,9 +104,9 @@ export interface CustomerSuccessResult {
 }
 
 export interface SalesResult {
-  /** 売上点の算定に使った金額 (既定は 売価 − 返金) */
+  /** 売上点の算定に使った金額 (既定は 税抜売上 − 返金の税抜相当額) */
   amount: number;
-  /** 評価対象外を含む総額 (表示用) */
+  /** 評価対象外も含む税込の総額 (表示用) */
   grossAmount: number;
   /** 税・決済手数料・返金を差し引いた純額 (報酬計算・分析の参照用) */
   netAmount: number;

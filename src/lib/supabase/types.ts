@@ -96,6 +96,10 @@ export interface ProductRow {
   is_sales_score_target: boolean;
   active: boolean;
   sort_order: number;
+  /** 消費税率 (0.10 = 10%) */
+  tax_rate: number;
+  /** 標準価格が税込か */
+  price_includes_tax: boolean;
 }
 
 export interface SaleRow {

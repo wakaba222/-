@@ -12,6 +12,10 @@ import {
   netAmount,
   round1,
   standardRateOf,
+  deriveTaxAmount,
+  evaluationAmount,
+  taxExclusiveAmount,
+  taxExclusiveRefund,
 } from './index';
 import type { EvaluationRules } from './rules';
 import type { SaleEvaluationInput, SnapshotSummary } from '../types';
@@ -282,12 +286,24 @@ describe('売上の精算情報', () => {
       .toBe(775_000);
   });
 
-  it('既定では売上点は売価ベース (税・手数料を引かない)', () => {
+  it('既定では売上点は税抜売上ベース (決済手数料は引かない)', () => {
     const result = calcSalesScore([sale({ amount: 3_500_000, taxAmount: 318_181, paymentFee: 120_000 })], '2026-05', RULES);
+    // 税抜 3,181,819。決済手数料 120,000 は控除しない
+    expect(result.amount).toBe(3_181_819);
+    expect(result.score).toBe(47.9);
+    // 純額 (手数料も引いた額) は会社側の利益管理用に別途保持する
+    expect(result.netAmount).toBe(3_061_819);
+  });
+
+  it('設定を GROSS_MINUS_REFUND に変えると税込の売価ベースになる', () => {
+    const grossRules: EvaluationRules = { ...RULES, sales: { ...RULES.sales, amountBasis: 'GROSS_MINUS_REFUND' } };
+    const result = calcSalesScore(
+      [sale({ amount: 3_500_000, taxAmount: 318_181, paymentFee: 120_000 })],
+      '2026-05',
+      grossRules,
+    );
     expect(result.amount).toBe(3_500_000);
     expect(result.score).toBe(50);
-    // 純額は別途保持され、報酬計算や分析に使える
-    expect(result.netAmount).toBe(3_061_819);
   });
 
   it('設定を NET に変えると純額ベースで採点される', () => {
@@ -321,5 +337,124 @@ describe('制度の基準値がルールから導出されている', () => {
 
   it('ランク別レッスン単価が制度どおり', () => {
     expect(RULES.lessonUnitPrice).toEqual({ P1: 0, P2: 10_000, P3: 12_000, P4: 15_000 });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 売上Scoreの税抜化 (確定仕様)
+//   Professional Score 対象売上 = 税抜売上 − 返金の税抜相当額
+//   決済手数料は控除しない
+// ---------------------------------------------------------------------------
+
+describe('税込価格の商品から売上Scoreまでの一連の計算', () => {
+  const TAX_RATE = 0.1;
+  // 商品マスタの売価はいずれも税込 (仕様9章)
+  const CATALOG = {
+    RESTART: 498_000,
+    BREAKTHROUGH: 899_000,
+    HIGH_PERFORMANCE: 2_000_000,
+  } as const;
+
+  /** 商品マスタの売価から、DBトリガと同じ規則で売上1件を組み立てる */
+  function saleOf(price: number, overrides: Partial<SaleEvaluationInput> = {}): SaleEvaluationInput {
+    return sale({ amount: price, taxAmount: deriveTaxAmount(price, TAX_RATE, true), ...overrides });
+  }
+
+  it('① 税込売価から消費税を割り戻す', () => {
+    expect(deriveTaxAmount(CATALOG.RESTART, TAX_RATE, true)).toBe(45_273);
+    expect(deriveTaxAmount(CATALOG.BREAKTHROUGH, TAX_RATE, true)).toBe(81_727);
+    expect(deriveTaxAmount(CATALOG.HIGH_PERFORMANCE, TAX_RATE, true)).toBe(181_818);
+  });
+
+  it('② 税抜売上を求める', () => {
+    expect(taxExclusiveAmount(saleOf(CATALOG.RESTART))).toBe(452_727);
+    expect(taxExclusiveAmount(saleOf(CATALOG.BREAKTHROUGH))).toBe(817_273);
+    expect(taxExclusiveAmount(saleOf(CATALOG.HIGH_PERFORMANCE))).toBe(1_818_182);
+  });
+
+  it('③ 返金は税抜相当額に換算して控除する', () => {
+    const refunded = saleOf(CATALOG.BREAKTHROUGH, { refundAmount: 400_000, status: 'REFUNDED' });
+    // 400,000 × (817,273 / 899,000) = 363,636
+    expect(taxExclusiveRefund(refunded)).toBe(363_636);
+    expect(evaluationAmount(refunded, RULES)).toBe(453_637);
+  });
+
+  it('④ 決済手数料は売上Scoreから控除しない', () => {
+    const withFee = saleOf(CATALOG.HIGH_PERFORMANCE, { paymentFee: 60_000 });
+    expect(evaluationAmount(withFee, RULES)).toBe(1_818_182);
+    // 会社側の利益管理に使う純額では手数料も差し引かれる
+    expect(netAmount(withFee)).toBe(1_758_182);
+  });
+
+  it('⑤ 月間売上を合算して売上点を算出する', () => {
+    const monthlySales = [
+      saleOf(CATALOG.RESTART),
+      saleOf(CATALOG.BREAKTHROUGH),
+      saleOf(CATALOG.HIGH_PERFORMANCE),
+    ];
+    const result = calcSalesScore(monthlySales, '2026-05', RULES);
+
+    // 452,727 + 817,273 + 1,818,182 = 3,088,182 (税抜)
+    expect(result.amount).toBe(3_088_182);
+    // 税込の総額も別途保持する
+    expect(result.grossAmount).toBe(3_397_000);
+    // 200万=40点 / 350万=50点 の区間を線形補間
+    expect(result.score).toBe(47.3);
+  });
+
+  it('⑥ 返金を含む月でも合算から売上点まで通る', () => {
+    const monthlySales = [
+      saleOf(CATALOG.RESTART),
+      saleOf(CATALOG.BREAKTHROUGH, { refundAmount: 400_000, status: 'REFUNDED' }),
+      saleOf(CATALOG.HIGH_PERFORMANCE),
+    ];
+    const result = calcSalesScore(monthlySales, '2026-05', RULES);
+
+    // 452,727 + 453,637 + 1,818,182 = 2,724,546
+    expect(result.amount).toBe(2_724_546);
+    expect(result.score).toBe(44.8);
+  });
+
+  it('⑦ 税抜価格の商品は売価がそのまま評価対象額になる', () => {
+    const taxExclusiveProduct = sale({
+      amount: 1_000_000,
+      taxAmount: deriveTaxAmount(1_000_000, TAX_RATE, false),
+    });
+    expect(taxExclusiveProduct.taxAmount).toBe(0);
+    expect(evaluationAmount(taxExclusiveProduct, RULES)).toBe(1_000_000);
+  });
+
+  it('⑧ 全額返金は評価対象額0円', () => {
+    const fully = saleOf(CATALOG.RESTART, { refundAmount: CATALOG.RESTART, status: 'REFUNDED' });
+    expect(evaluationAmount(fully, RULES)).toBe(0);
+  });
+
+  it('⑨ アンカーは税抜売上額の基準として扱われる', () => {
+    // 税抜でちょうど350万を作ると50点になる
+    const exact = sale({ amount: 3_850_000, taxAmount: 350_000 });
+    expect(taxExclusiveAmount(exact)).toBe(3_500_000);
+    expect(calcSalesScore([exact], '2026-05', RULES).score).toBe(50);
+  });
+});
+
+describe('行動ルールの昇格可否 (確定仕様)', () => {
+  const months = [snapshot('2026-03', 120), snapshot('2026-04', 120), snapshot('2026-05', 120)];
+
+  it.each([
+    ['OK', true],
+    ['WARNING', false],
+    ['NG', false],
+  ])('行動ルール %s のとき昇格候補=%s', (status, expected) => {
+    const result = evaluatePromotion(
+      {
+        level: 'P1',
+        snapshots: months,
+        behaviorStatus: status as 'OK' | 'WARNING' | 'NG',
+        requirementCounts: {},
+      },
+      RULES,
+    );
+    expect(result.status === 'CANDIDATE').toBe(expected);
+    if (!expected) expect(result.shortfalls.map((s) => s.code)).toContain('BEHAVIOR');
   });
 });

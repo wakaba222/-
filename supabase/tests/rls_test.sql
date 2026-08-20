@@ -228,4 +228,47 @@ begin
     '現担当が1人になっていない';
 end $$;
 
+-- ============================================================================
+-- 消費税額の導出 (確定仕様: 売上Scoreは税抜売上ベース)
+-- src/domain/evaluation/sales.ts の deriveTaxAmount と同じ結果になること
+-- ============================================================================
+set role postgres;
+do $$
+declare
+  v_product uuid;
+  v_tax integer;
+  v_sale_amount integer := 498000;
+begin
+  -- 内税商品: 売価から消費税を割り戻す
+  insert into public.products (code, name, default_price, incentive_amount, tax_rate, price_includes_tax)
+  values ('TAX_INCLUSIVE_TEST', '内税テスト商品', v_sale_amount, 10000, 0.10, true)
+  returning id into v_product;
+
+  insert into public.sales (coach_id, product_id, sold_on, amount)
+  values ('00000000-0000-0000-0000-0000000000f1', v_product, '2026-05-20', v_sale_amount)
+  returning tax_amount into v_tax;
+  assert v_tax = 45273, format('内税の税額が想定と違う: %s (期待 45273)', v_tax);
+  assert v_sale_amount - v_tax = 452727, '税抜売上が想定と違う';
+
+  -- 外税商品: 売価がそのまま税抜なので税額は0
+  insert into public.products (code, name, default_price, incentive_amount, tax_rate, price_includes_tax)
+  values ('TAX_EXCLUSIVE_TEST', '外税テスト商品', 1000000, 0, 0.10, false)
+  returning id into v_product;
+
+  insert into public.sales (coach_id, product_id, sold_on, amount)
+  values ('00000000-0000-0000-0000-0000000000f1', v_product, '2026-05-21', 1000000)
+  returning tax_amount into v_tax;
+  assert v_tax = 0, format('外税商品の税額が0でない: %s', v_tax);
+
+  -- 税額はクライアント申告を採用しない
+  insert into public.products (code, name, default_price, incentive_amount, tax_rate, price_includes_tax)
+  values ('TAX_SPOOF_TEST', '申告テスト商品', 2000000, 50000, 0.10, true)
+  returning id into v_product;
+
+  insert into public.sales (coach_id, product_id, sold_on, amount, tax_amount)
+  values ('00000000-0000-0000-0000-0000000000f1', v_product, '2026-05-22', 2000000, 1900000)
+  returning tax_amount into v_tax;
+  assert v_tax = 181818, format('申告された税額が保存されてしまった: %s (期待 181818)', v_tax);
+end $$;
+
 select 'INTEGRITY TEST PASSED' as result;

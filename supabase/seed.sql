@@ -197,6 +197,7 @@ declare
   v_coach_no   int;
   v_codes      text[] := array['RESTART','BREAKTHROUGH','HIGH_PERFORMANCE'];
   v_code       text;
+  v_refunded_sale uuid;
 begin
   for v_coach_no in 1..3 loop
     v_coach := case v_coach_no
@@ -229,13 +230,21 @@ begin
   values ('aaaaaaaa-0000-0000-0000-000000000001', null, v_product,
           (date_trunc('month', current_date) + interval '8 days')::date, 498000, 10000, 'COACH_SNS', 'Instagram経由の新規');
 
-  -- 一部返金された売上 (純額で集計されることの確認用)
+  -- 一部返金された売上 (税抜相当額が控除されることの確認用)
+  --
+  -- 売上は登録時に必ず「有効・返金0」で始まる (整合性トリガ)。
+  -- 返金はADMINの更新操作なので、seedでも登録してから更新する。
   select id into v_product from public.products where code = 'BREAKTHROUGH';
   insert into public.sales (coach_id, customer_id, product_id, sold_on, amount, incentive_amount,
-                            acquisition_source, status, refund_amount, status_changed_on, note)
+                            acquisition_source, note)
   values ('aaaaaaaa-0000-0000-0000-000000000002', null, v_product,
           (date_trunc('month', current_date) - interval '1 month' + interval '12 days')::date,
-          899000, 20000, 'EXISTING', 'REFUNDED', 400000, current_date, '中途解約に伴う一部返金');
+          899000, 20000, 'EXISTING', '中途解約に伴う一部返金')
+  returning id into v_refunded_sale;
+
+  update public.sales
+     set status = 'REFUNDED', refund_amount = 400000, status_changed_on = current_date
+   where id = v_refunded_sale;
 end $$;
 
 -- --- 行動ルール・上位活動要件 ------------------------------------------------

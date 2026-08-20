@@ -8,6 +8,7 @@ import { FormMessage } from '@/components/ui/FormMessage';
 import { INITIAL_ACTION_STATE } from '@/server/actionResult';
 import { createSaleAction } from '@/server/actions/coachActions';
 import { formatYen } from '@/lib/format';
+import { deriveTaxAmount } from '@/domain/evaluation';
 import type { ProductRow } from '@/lib/supabase/types';
 
 export function SaleForm({
@@ -22,6 +23,11 @@ export function SaleForm({
   const [amount, setAmount] = useState('');
 
   const product = products.find((p) => p.id === productId) ?? null;
+  const enteredAmount = Number(amount) || 0;
+  // 税抜額の算出はサーバー側と同じ規則。登録前に評価対象額が分かるようにする
+  const taxExclusive = product
+    ? enteredAmount - deriveTaxAmount(enteredAmount, product.tax_rate, product.price_includes_tax)
+    : 0;
 
   function handleProductChange(nextProductId: string) {
     setProductId(nextProductId);
@@ -68,13 +74,21 @@ export function SaleForm({
       </Field>
 
       {product ? (
-        <p className="rounded-xl bg-canvas px-3 py-2 text-sm text-ink-700">
-          成約ショットインセンティブ:{' '}
-          <span className="font-semibold text-eagle-800">{formatYen(product.incentive_amount)}</span>
-          {!product.is_sales_score_target ? (
-            <span className="ml-2 text-xs text-ink-500">※この商品は売上点の評価対象外です</span>
-          ) : null}
-        </p>
+        <div className="rounded-xl bg-canvas px-3 py-2 text-sm text-ink-700">
+          <p>
+            成約ショットインセンティブ:{' '}
+            <span className="font-semibold text-eagle-800">{formatYen(product.incentive_amount)}</span>
+            {!product.is_sales_score_target ? (
+              <span className="ml-2 text-xs text-ink-500">※この商品は売上点の評価対象外です</span>
+            ) : null}
+          </p>
+          <p className="mt-1 text-xs text-ink-500">
+            売上点の対象額 (税抜): {formatYen(taxExclusive)}
+            {product.price_includes_tax
+              ? `（税込 ${formatYen(enteredAmount)} / 消費税 ${Math.round(product.tax_rate * 100)}%）`
+              : '（税抜価格の商品）'}
+          </p>
+        </div>
       ) : null}
 
       <Field label="成約日" required>

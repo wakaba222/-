@@ -31,7 +31,7 @@ const UNIQUE_VIOLATION = '23505';
 export async function registerSale(db: Db, input: RegisterSaleInput): Promise<RegisterSaleResult> {
   const { data: product, error: productError } = await db
     .from('products')
-    .select('id, code, name, default_price, incentive_amount, is_sales_score_target, active, sort_order')
+    .select('id, code, name, default_price, incentive_amount, is_sales_score_target, active, sort_order, tax_rate, price_includes_tax')
     .eq('id', input.productId)
     .maybeSingle<ProductRow>();
   if (productError) throw new Error(`商品の取得に失敗しました: ${productError.message}`);

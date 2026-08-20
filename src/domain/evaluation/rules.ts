@@ -50,10 +50,13 @@ export const evaluationRulesSchema = z.object({
     scoreBasis: z.enum(['MONTHLY', 'ROLLING_3M']),
     /**
      * 売上点に使う金額。
-     * GROSS_MINUS_REFUND = 売価 − 返金 (既定。アンカーは売価水準で設計されている)
-     * NET = さらに消費税・決済手数料を差し引いた純額
+     * TAX_EXCLUSIVE      = 税抜売上 − 返金の税抜相当額 (確定仕様の既定)
+     * GROSS_MINUS_REFUND = 売価 − 返金 (税を差し引かない)
+     * NET                = さらに決済手数料も差し引いた純額
+     *
+     * 決済手数料は会社側の利益管理に使うが、コーチの売上Scoreからは控除しない。
      */
-    amountBasis: z.enum(['GROSS_MINUS_REFUND', 'NET']).default('GROSS_MINUS_REFUND'),
+    amountBasis: z.enum(['TAX_EXCLUSIVE', 'GROSS_MINUS_REFUND', 'NET']).default('TAX_EXCLUSIVE'),
     /**
      * 返金が発生した売上の成約ショットインセンティブの扱い。
      * KEEP_UNLESS_FULL = 全額返金でなければ支給を維持する (既定)
@@ -140,7 +143,7 @@ export const DEFAULT_EVALUATION_RULES: EvaluationRules = {
   sales: {
     includeCoachSns: false,
     scoreBasis: 'MONTHLY',
-    amountBasis: 'GROSS_MINUS_REFUND',
+    amountBasis: 'TAX_EXCLUSIVE',
     incentiveOnRefund: 'KEEP_UNLESS_FULL',
     monthly: {
       anchors: [

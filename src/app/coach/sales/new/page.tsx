@@ -12,7 +12,7 @@ export default async function NewSalePage() {
   const [{ data: products }, { data: customers }, { data: recentSales }] = await Promise.all([
     supabase
       .from('products')
-      .select('id, code, name, default_price, incentive_amount, is_sales_score_target, active, sort_order')
+      .select('id, code, name, default_price, incentive_amount, is_sales_score_target, active, sort_order, tax_rate, price_includes_tax')
       .eq('active', true)
       .order('sort_order')
       .returns<ProductRow[]>(),

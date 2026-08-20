@@ -32,14 +32,48 @@ function isCounted(sale: SaleEvaluationInput): boolean {
 }
 
 /**
- * 評価に計上する金額。キャンセル済みは 0 円として扱う (行は削除しない)。
- * 消費税・決済手数料を差し引くかどうかはルールの amountBasis に従う。
+ * 売価に含まれる消費税額を求める。
+ * 内税商品は売価から割り戻し、外税商品は売価がそのまま税抜なので0とする。
+ * 保存される値は DB のトリガが確定させる (app.set_sale_incentive)。
+ * この関数は登録前プレビューと検証で同じ規則を使うためのもの。
+ */
+export function deriveTaxAmount(amount: number, taxRate: number, priceIncludesTax: boolean): number {
+  if (!priceIncludesTax || taxRate <= 0 || amount <= 0) return 0;
+  return Math.round((amount * taxRate) / (1 + taxRate));
+}
+
+/** 税抜売上 (売価に含まれる消費税を除いた額) */
+export function taxExclusiveAmount(sale: SaleEvaluationInput): number {
+  return Math.max(0, sale.amount - sale.taxAmount);
+}
+
+/**
+ * 返金の税抜相当額。
+ * 返金は税込で記録されるため、その売上の税抜比率を掛けて税抜相当に換算する。
+ */
+export function taxExclusiveRefund(sale: SaleEvaluationInput): number {
+  if (sale.amount <= 0 || sale.refundAmount <= 0) return 0;
+  return Math.round(sale.refundAmount * (taxExclusiveAmount(sale) / sale.amount));
+}
+
+/**
+ * 売上点の算定に計上する金額。キャンセル済みは 0 円として扱う (行は削除しない)。
+ *
+ * 確定仕様の既定は TAX_EXCLUSIVE:
+ *   税抜売上 − 返金の税抜相当額
+ * 決済手数料は控除しない (会社側の利益管理でのみ使う)。
  */
 export function evaluationAmount(sale: SaleEvaluationInput, rules: EvaluationRules): number {
   if (sale.status === 'CANCELLED') return 0;
-  const grossMinusRefund = Math.max(0, sale.amount - sale.refundAmount);
-  if (rules.sales.amountBasis !== 'NET') return grossMinusRefund;
-  return Math.max(0, grossMinusRefund - sale.taxAmount - sale.paymentFee);
+
+  switch (rules.sales.amountBasis) {
+    case 'TAX_EXCLUSIVE':
+      return Math.max(0, taxExclusiveAmount(sale) - taxExclusiveRefund(sale));
+    case 'NET':
+      return Math.max(0, sale.amount - sale.refundAmount - sale.taxAmount - sale.paymentFee);
+    default:
+      return Math.max(0, sale.amount - sale.refundAmount);
+  }
 }
 
 /** 純額 (売価 − 税 − 決済手数料 − 返金)。報酬計算や分析の参照用 */
@@ -90,7 +124,10 @@ export function aggregateSales(
 
   return {
     amount: sumEvaluationAmount(target, rules),
-    grossAmount: sumEvaluationAmount(inPeriod.filter(isCounted), rules),
+    // 総額は税込・評価対象外の商品も含む (画面の「全体の売上」表示用)
+    grossAmount: inPeriod
+      .filter(isCounted)
+      .reduce((total, sale) => total + Math.max(0, sale.amount - sale.refundAmount), 0),
     netAmount: inPeriod.filter(isCounted).reduce((total, sale) => total + netAmount(sale), 0),
     coachSnsAmount: sumEvaluationAmount(
       inPeriod.filter((s) => isCounted(s) && s.acquisitionSource === 'COACH_SNS'),

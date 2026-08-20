@@ -97,7 +97,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ typ
       ]);
       const coachNames = new Map(coaches.map((c) => [c.id, c.users?.name ?? '']));
       csv = toCsv(
-        ['成約日', 'コーチ', '顧客', '商品', '売価', '消費税', '決済手数料', '返金額', '純額',
+        ['成約日', 'コーチ', '顧客', '商品', '売価(税込)', '消費税', '税抜売上', '決済手数料', '返金額', '純額',
          'インセンティブ', '獲得経路', '入金経路', '状態', '評価対象商品'],
         (data ?? []).map((sale) => [
           sale.sold_on,
@@ -106,6 +106,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ typ
           sale.products?.name ?? '',
           sale.amount,
           sale.tax_amount,
+          sale.amount - sale.tax_amount,
           sale.payment_fee,
           sale.refund_amount,
           sale.net_amount,

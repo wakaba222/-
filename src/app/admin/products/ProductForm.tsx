@@ -42,6 +42,19 @@ export function ProductForm({ product }: { product: ProductRow | null }) {
           <option value="false">対象外</option>
         </Select>
       </Field>
+      <Field label="価格の税区分" hint="売上Scoreは税抜売上で算定します">
+        <Select name="priceIncludesTax" defaultValue={String(product?.price_includes_tax ?? true)} className="text-sm">
+          <option value="true">税込価格</option>
+          <option value="false">税抜価格</option>
+        </Select>
+      </Field>
+      <Field label="消費税率">
+        <Select name="taxRate" defaultValue={String(product?.tax_rate ?? 0.1)} className="text-sm">
+          <option value="0.1">10%</option>
+          <option value="0.08">8% (軽減税率)</option>
+          <option value="0">0% (非課税)</option>
+        </Select>
+      </Field>
       <div className="sm:col-span-6 flex flex-wrap items-center gap-3">
         <Select name="active" defaultValue={String(product?.active ?? true)} className="w-32 text-sm">
           <option value="true">有効</option>
