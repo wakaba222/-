@@ -10,6 +10,13 @@ const CHROMIUM_PATH = process.env.PLAYWRIGHT_CHROMIUM_PATH ?? '/opt/pw-browsers/
 const LAUNCH_OPTIONS = { executablePath: CHROMIUM_PATH, args: ['--no-sandbox'] };
 
 /**
+ * この環境の外部通信は HTTP プロキシ経由に限られる。
+ * Chromium は環境変数を読まないため明示的に指定する (ローカル検証時は素通し)。
+ */
+const PROXY_SERVER = process.env.HTTPS_PROXY ?? process.env.https_proxy;
+const PROXY = PROXY_SERVER ? { proxy: { server: PROXY_SERVER, bypass: 'localhost,127.0.0.1' } } : {};
+
+/**
  * 実環境 (Supabase) に接続したアプリを、実ブラウザで通しで確認するための設定。
  * 事前に `npm run build` を済ませ、本番ビルドを起動して検証する。
  */
@@ -28,6 +35,7 @@ export default defineConfig({
     timezoneId: 'Asia/Tokyo',
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
+    ...PROXY,
   },
   projects: [
     {
