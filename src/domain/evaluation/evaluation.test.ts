@@ -14,6 +14,7 @@ import {
   judgeCompleteSuccess,
   aggregateSales,
   monthPeriod,
+  resolveResponsibleCoachId,
 } from './index';
 import { endOfMonth } from '../date';
 import type {
@@ -452,5 +453,25 @@ describe('ダッシュボードの逆算表示', () => {
 
   it('既に達成している場合は0名', () => {
     expect(countNeededForRate(0.9, 10, 10)).toBe(0);
+  });
+});
+
+describe('成果の帰属 (担当変更)', () => {
+  const assignments = [
+    { customerId: 'c1', coachId: 'old', startDate: '2026-01-01', endDate: '2026-04-30' },
+    { customerId: 'c1', coachId: 'new', startDate: '2026-05-01', endDate: null },
+  ];
+
+  it('達成済みの顧客は達成日時点の担当コーチに帰属する', () => {
+    expect(resolveResponsibleCoachId(assignments, '2026-03-10', 'new')).toBe('old');
+    expect(resolveResponsibleCoachId(assignments, '2026-06-10', 'new')).toBe('new');
+  });
+
+  it('未達成の顧客は現担当コーチに帰属する', () => {
+    expect(resolveResponsibleCoachId(assignments, null, 'new')).toBe('new');
+  });
+
+  it('担当履歴が無い場合は現担当にフォールバックする', () => {
+    expect(resolveResponsibleCoachId([], '2026-03-10', 'fallback')).toBe('fallback');
   });
 });

@@ -1,16 +1,17 @@
-import { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { FlatCompat } from '@eslint/eslintrc';
+import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
+import nextTypescript from 'eslint-config-next/typescript';
 
-const compat = new FlatCompat({ baseDirectory: dirname(fileURLToPath(import.meta.url)) });
-
-export default [
-  ...compat.extends('next/core-web-vitals', 'next/typescript'),
-  { ignores: ['.next/**', 'node_modules/**', 'supabase/**'] },
+const config = [
+  ...nextCoreWebVitals,
+  ...nextTypescript,
+  { ignores: ['.next/**', 'node_modules/**', 'supabase/**', 'scripts/**'] },
   {
     rules: {
+      // 評価ロジックの型を崩さないため any は禁止 (仕様44章)
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/consistent-type-imports': 'warn',
     },
   },
 ];
+
+export default config;

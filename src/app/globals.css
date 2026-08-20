@@ -1,0 +1,61 @@
+@import 'tailwindcss';
+
+/*
+ * EAGLE デザイントークン
+ * 白ベース + ダークグリーン + ゴールドアクセント。
+ * 情報量を詰め込まず、「今何点か」「あと何が必要か」を最優先に見せる。
+ */
+@theme {
+  --color-eagle-950: #05201a;
+  --color-eagle-900: #0b3b2e;
+  --color-eagle-800: #114c3b;
+  --color-eagle-700: #17604a;
+  --color-eagle-600: #1f7a5e;
+  --color-eagle-500: #2f9576;
+  --color-eagle-100: #e2f0ea;
+  --color-eagle-50: #f2f8f5;
+
+  --color-gold-600: #a8813c;
+  --color-gold-500: #c6a15b;
+  --color-gold-100: #f6edda;
+
+  --color-ink-900: #16211d;
+  --color-ink-700: #3c4a45;
+  --color-ink-500: #6b7a74;
+  --color-ink-300: #a8b3ae;
+
+  --color-line: #e4e9e6;
+  --color-canvas: #f7f9f8;
+
+  --color-danger-600: #b4342b;
+  --color-danger-100: #fbe9e7;
+  --color-warn-600: #a8761c;
+  --color-warn-100: #fbf1de;
+
+  --font-sans: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', system-ui, -apple-system, sans-serif;
+
+  --radius-card: 14px;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink-900);
+  font-family: var(--font-sans);
+  font-feature-settings: 'palt';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 数値は等幅で桁を揃える。スコアの見比べが目的の画面なので可読性に直結する */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media print {
+  .no-print {
+    display: none;
+  }
+}
