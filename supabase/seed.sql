@@ -41,57 +41,60 @@ insert into public.coaches (id, user_id, professional_level, lesson_unit_price, 
 on conflict (user_id) do nothing;
 
 -- --- 顧客の仕様表 -----------------------------------------------------------
--- achieved_months_ago: null = 未達成 / 数値 = 何ヶ月前に完全達成したか
+-- achieved_month_offset: null = 未達成 / 0 = 今月, 1 = 先月 … (月境界で指定する)
+--   月末で締める評価と噛み合うよう、日数ではなく「何ヶ月前の月」で指定している。
+--   これにより seed をいつ流しても、直近3ヶ月の成績カーブが同じ形になる。
 create temp table seed_customers (
-  coach_no            int,
-  name                text,
-  start_months_ago    int,
-  status              customer_status,
-  cancel_reason       cancel_reason_code,
-  goal_type           goal_type,
-  target_score        numeric,
-  target_distance     numeric,
-  achieved_months_ago numeric,
-  goal_status         goal_approval_status
+  coach_no             int,
+  name                 text,
+  start_months_ago     int,
+  status               customer_status,
+  cancel_reason        cancel_reason_code,
+  goal_type            goal_type,
+  target_score         numeric,
+  target_distance      numeric,
+  achieved_month_offset int,
+  achieved_day         int,
+  goal_status          goal_approval_status
 );
 
-insert into seed_customers (coach_no, name, start_months_ago, status, cancel_reason, goal_type, target_score, target_distance, achieved_months_ago, goal_status) values
-  -- コーチ1 (田中/P2): 昇格候補。長期成果率 90% (対象10名中9名達成)
-  (1, '青木 慎一', 10, 'COMPLETED', null, 'SCORE',    100, null,  5,   'APPROVED'),
-  (1, '井上 亮',    9, 'COMPLETED', null, 'SCORE',     95, null,  4,   'APPROVED'),
-  (1, '上田 直樹',  9, 'COMPLETED', null, 'DISTANCE', null, 250,  4,   'APPROVED'),
-  (1, '遠藤 拓也',  8, 'ACTIVE',    null, 'SCORE',     90, null,  3.5, 'APPROVED'),
-  (1, '大野 剛',    8, 'ACTIVE',    null, 'SCORE',    100, null,  2,   'APPROVED'),
-  (1, '加藤 学',    7, 'ACTIVE',    null, 'BOTH',     100,  240,  1.5, 'APPROVED'),
-  (1, '川口 洋介',  7, 'ACTIVE',    null, 'SCORE',     95, null,  1,   'APPROVED'),
-  (1, '木村 修', 6, 'ACTIVE',  null, 'SCORE',    100, null,  0.5, 'APPROVED'),
-  -- プログラム終了後に達成 (仕様9章のデモ)
-  (1, '小林 康平', 11, 'COMPLETED', null, 'SCORE',    100, null,  0.7, 'APPROVED'),
-  (1, '斉藤 誠',    6, 'ACTIVE',    null, 'SCORE',     90, null,  null, 'APPROVED'),
-  -- 評価対象前 (開始3ヶ月) と 承認待ち
-  (1, '佐々木 涼',  2, 'ACTIVE',    null, 'SCORE',    100, null,  null, 'APPROVED'),
-  (1, '島田 光',    1, 'ACTIVE',    null, 'SCORE',    100, null,  null, 'PENDING'),
+insert into seed_customers (coach_no, name, start_months_ago, status, cancel_reason, goal_type, target_score, target_distance, achieved_month_offset, achieved_day, goal_status) values
+  -- コーチ1 (田中/P2): 昇格候補。評価対象10名中9名達成 = 完全成果率90%
+  (1, '青木 慎一', 10, 'COMPLETED', null, 'SCORE',    100, null,  6,    12, 'APPROVED'),
+  (1, '井上 亮',    9, 'COMPLETED', null, 'SCORE',     95, null,  5,    18, 'APPROVED'),
+  (1, '上田 直樹',  9, 'COMPLETED', null, 'DISTANCE', null, 250,  4,     8, 'APPROVED'),
+  (1, '遠藤 拓也',  8, 'ACTIVE',    null, 'SCORE',     90, null,  3,    22, 'APPROVED'),
+  (1, '大野 剛',    8, 'ACTIVE',    null, 'SCORE',    100, null,  2,     5, 'APPROVED'),
+  (1, '加藤 学',    7, 'ACTIVE',    null, 'BOTH',     100,  240,  2,    12, 'APPROVED'),
+  (1, '川口 洋介',  7, 'ACTIVE',    null, 'SCORE',     95, null,  2,    18, 'APPROVED'),
+  (1, '木村 修',    6, 'ACTIVE',    null, 'SCORE',    100, null,  2,    24, 'APPROVED'),
+  -- プログラム終了後に達成 (仕様9章: 終了後の達成も完全成果に加算される)
+  (1, '小林 康平', 11, 'COMPLETED', null, 'SCORE',    100, null,  2,    27, 'APPROVED'),
+  (1, '斉藤 誠',    6, 'ACTIVE',    null, 'SCORE',     90, null,  null, null, 'APPROVED'),
+  -- 評価対象前 (開始2ヶ月) と 目標の承認待ち
+  (1, '佐々木 涼',  2, 'ACTIVE',    null, 'SCORE',    100, null,  null, null, 'APPROVED'),
+  (1, '島田 光',    1, 'ACTIVE',    null, 'SCORE',    100, null,  null, null, 'PENDING'),
 
-  -- コーチ2 (佐藤/P1): 育成段階。対象6名中3名達成
-  (2, '田村 直人', 9, 'COMPLETED', null, 'SCORE', 100, null, 6,   'APPROVED'),
-  (2, '中島 悠',    8, 'ACTIVE',    null, 'SCORE',    100, null,  2.5, 'APPROVED'),
-  (2, '西村 亮太',  7, 'ACTIVE',    null, 'DISTANCE', null, 230,  1,   'APPROVED'),
-  (2, '野口 健',    7, 'ACTIVE',    null, 'SCORE',     95, null,  null, 'APPROVED'),
-  (2, '橋本 淳',    6, 'ACTIVE',    null, 'SCORE',    100, null,  null, 'APPROVED'),
-  (2, '林 大地',    5, 'ACTIVE',    null, 'SCORE',    100, null,  null, 'APPROVED'),
-  (2, '福田 翔',    3, 'ACTIVE',    null, 'SCORE',    100, null,  null, 'APPROVED'),
-  -- 休会 (経過月数のカウントが止まるデモ)
-  (2, '古川 諒',    8, 'SUSPENDED', null, 'SCORE',    100, null,  null, 'APPROVED'),
+  -- コーチ2 (佐藤/P1): 育成段階。評価対象6名中3名達成
+  (2, '田村 直人',  9, 'COMPLETED', null, 'SCORE',    100, null,  6,    14, 'APPROVED'),
+  (2, '中島 悠',    8, 'ACTIVE',    null, 'SCORE',    100, null,  3,     9, 'APPROVED'),
+  (2, '西村 亮太',  7, 'ACTIVE',    null, 'DISTANCE', null, 230,  1,    16, 'APPROVED'),
+  (2, '野口 健',    7, 'ACTIVE',    null, 'SCORE',     95, null,  null, null, 'APPROVED'),
+  (2, '橋本 淳',    6, 'ACTIVE',    null, 'SCORE',    100, null,  null, null, 'APPROVED'),
+  (2, '林 大地',    5, 'ACTIVE',    null, 'SCORE',    100, null,  null, null, 'APPROVED'),
+  (2, '福田 翔',    3, 'ACTIVE',    null, 'SCORE',    100, null,  null, null, 'APPROVED'),
+  -- 休会 (経過月数のカウントが止まり、評価分母から外れる)
+  (2, '古川 諒',    8, 'SUSPENDED', null, 'SCORE',    100, null,  null, null, 'APPROVED'),
 
-  -- コーチ3 (鈴木/P3): トップ水準。対象6名中6名達成
-  (3, '本田 修平', 10, 'COMPLETED', null, 'SCORE',     90, null,  6,   'APPROVED'),
-  (3, '松井 圭',    9, 'COMPLETED', null, 'BOTH',      95,  260,  4,   'APPROVED'),
-  (3, '三浦 悠真',  8, 'ACTIVE',    null, 'SCORE',     90, null,  2,   'APPROVED'),
-  (3, '村上 蓮',    7, 'ACTIVE',    null, 'DISTANCE', null, 270,  1.5, 'APPROVED'),
-  (3, '森 陸',      6, 'ACTIVE',    null, 'SCORE',     95, null,  1,   'APPROVED'),
-  (3, '山口 颯',    5, 'ACTIVE',    null, 'SCORE',    100, null,  0.5, 'APPROVED'),
-  -- 自己都合解約 (分母から外れるデモ)
-  (3, '吉田 匠',    7, 'CANCELLED', 'SELF', 'SCORE',  100, null,  null, 'APPROVED');
+  -- コーチ3 (鈴木/P3): トップ水準。評価対象6名全員が達成 = 120点
+  (3, '本田 修平', 10, 'COMPLETED', null, 'SCORE',     90, null,  6,    11, 'APPROVED'),
+  (3, '松井 圭',    9, 'COMPLETED', null, 'BOTH',      95,  260,  4,    17, 'APPROVED'),
+  (3, '三浦 悠真',  8, 'ACTIVE',    null, 'SCORE',     90, null,  3,     6, 'APPROVED'),
+  (3, '村上 蓮',    7, 'ACTIVE',    null, 'DISTANCE', null, 270,  2,    21, 'APPROVED'),
+  (3, '森 陸',      6, 'ACTIVE',    null, 'SCORE',     95, null,  1,    13, 'APPROVED'),
+  (3, '山口 颯',    5, 'ACTIVE',    null, 'SCORE',    100, null,  0,     4, 'APPROVED'),
+  -- 自己都合解約 (評価分母から外れる)
+  (3, '吉田 匠',    7, 'CANCELLED', 'SELF', 'SCORE',  100, null,  null, null, 'APPROVED');
 
 -- --- 顧客・目標・担当履歴・成果履歴の生成 ------------------------------------
 do $$
@@ -113,8 +116,14 @@ begin
                  else        'aaaaaaaa-0000-0000-0000-000000000003'::uuid end;
     v_start := current_date - make_interval(months => r.start_months_ago);
     v_end   := v_start + interval '6 months';
-    v_achieved := case when r.achieved_months_ago is null then null
-                       else current_date - make_interval(days => (r.achieved_months_ago * 30)::int) end;
+    -- 達成日は「N ヶ月前の月の指定日」。未来日にならないよう当日で丸める
+    v_achieved := case when r.achieved_month_offset is null then null
+                       else least(
+                         current_date - 1,
+                         (date_trunc('month', current_date)
+                          - make_interval(months => r.achieved_month_offset)
+                          + make_interval(days => r.achieved_day - 1))::date
+                       ) end;
     v_target_s := r.target_score;
     v_target_d := r.target_distance;
 

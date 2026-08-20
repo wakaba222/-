@@ -3,23 +3,12 @@
 株式会社イーグル ゴルフコーチ向け 評価・報酬管理システム。
 
 コーチが顧客成果を出し、売上を作り、キャリアを上げるためのシステム。
-評価制度の管理台帳ではなく、**「今どこにいるか」「次に何をすればいいか」** を示すことを最優先に設計する。
+評価制度の管理台帳ではなく、**「今どこにいるか」「次に何をすればいいか」** を示すことを最優先に設計している。
 
-## 現在のステータス
+コーチの日常入力は **成果登録と売上登録の2つだけ**。
+経過月数・評価対象判定・各種成果率・配点・3ヶ月平均・ボーナス・昇格判定はすべて自動計算する。
 
-**Phase 0: 設計レビュー中** (実装未着手)
-
-## 設計ドキュメント
-
-| ドキュメント | 内容 |
-|---|---|
-| [01-requirements.md](docs/01-requirements.md) | 要件理解 / 不明点・仕様矛盾と推奨デフォルト (Q1〜Q12) |
-| [02-architecture.md](docs/02-architecture.md) | 技術スタック / レイヤ構成 / 評価実行タイミング / セキュリティ |
-| [03-er-and-schema.md](docs/03-er-and-schema.md) | ER図 / 主要テーブル設計 / 設計上の要点 |
-| [04-evaluation-logic.md](docs/04-evaluation-logic.md) | 評価ルールJSON / 評価ロジック擬似コード |
-| [05-screens-and-plan.md](docs/05-screens-and-plan.md) | 画面一覧 / 実装Phase / 技術リスク / MVPスコープ / テスト対応表 |
-
-## 評価モデル (概要)
+## 評価モデル
 
 ```
 Professional Score (通常100点 / 最大120点)
@@ -27,9 +16,113 @@ Professional Score (通常100点 / 最大120点)
 │   ├── 長期: 完全成果率      90% → 30点 / 100% → 36点
 │   └── 短期: 直近3ヶ月成果率 90% → 20点 / 100% → 24点
 └── 売上点   (通常50 / 最大60)
+    └── 月次 200万 → 40点 / 350万 → 50点 / 500万 → 60点
 ```
 
-- 顧客はプログラム開始 **4ヶ月経過後** から成果評価の対象
-- **プログラム終了後の達成も完全成果として加算** (未達を永久固定にしない)
-- 昇格・ボーナスは **単月では判定せず**、3ヶ月連続 + 3ヶ月平均で判定
-- 閾値・配点・昇格基準は全て `evaluation_rules` でversion管理 (コード直書き禁止)
+- 顧客はプログラム開始から **満4ヶ月経過後** に成果評価の対象になる
+- **プログラム終了後の達成も完全成果として加算**する (未達を永久固定にしない)
+- 昇格・四半期ボーナスは **単月では判定せず**、3ヶ月連続 + 3ヶ月平均で判定する
+- 評価対象が0名のときは 0点ではなく **N/A (評価対象不足)** として扱う
+- 閾値・配点・昇格基準はすべて `evaluation_rules` に JSON で保持し、version 管理する
+
+## 技術構成
+
+| 領域 | 採用 |
+|---|---|
+| Framework | Next.js 16 (App Router) / React 19 / TypeScript strict |
+| UI | Tailwind CSS v4 (白ベース + ダークグリーン + ゴールド) |
+| DB / Auth | Supabase (PostgreSQL + Auth + Row Level Security) |
+| Validation | Zod (フォーム / Server Action / 評価ルール) |
+| Test | Vitest (評価ロジックの単体テスト) + psql による RLS 実地テスト |
+
+### ディレクトリ構成の要点
+
+```
+src/
+├── domain/          ★ 純粋関数のみ。DB・時刻・環境に一切依存しない
+│   ├── date.ts          Date を介さない日付演算 (JST固定)
+│   └── evaluation/      評価エンジン (rules / 対象判定 / 成果率 / 売上 / 昇格 / ボーナス)
+├── server/          I/O層 (repositories / services / Server Actions)
+├── app/             画面 (計算は書かない)
+└── components/      表示専用コンポーネント
+```
+
+評価は **リアルタイム表示も月次確定も同じ `evaluateCoachMonth` を通る**ため、
+ダッシュボードの数字とスナップショットの数字が食い違わない。
+
+## セットアップ
+
+```bash
+npm install
+cp .env.example .env.local   # Supabase の URL / キーを設定
+npm run dev
+```
+
+Supabase 側:
+
+```bash
+supabase start                       # ローカル環境
+supabase db reset                    # migrations + seed.sql を適用
+npm run db:types                     # DB型の再生成 (任意)
+```
+
+`supabase/migrations/` に スキーマ・監査ログ・RLS・マスタデータ、
+`supabase/seed.sql` にデモデータ (ADMIN1名・コーチ3名・顧客27名) が入っている。
+
+### デモアカウント
+
+| 役割 | メール | 想定される状態 |
+|---|---|---|
+| ADMIN | `admin@eagle.example` | 全体管理 |
+| COACH | `tanaka@eagle.example` | P2・**P3昇格候補** (Score 108.5 / 完全成果率90%) |
+| COACH | `sato@eagle.example` | P1・基準未達 (Score 50.2 / 行動ルール WARNING) |
+| COACH | `suzuki@eagle.example` | P3・最高評価 (Score 120 / 事業成果要件が未承認で昇格不可) |
+
+パスワードはいずれも `Passw0rd!` (デモ環境専用)。
+
+## テスト
+
+```bash
+npm test              # 評価ロジックの単体テスト (仕様35章の必須13ケース + 異常系)
+npm run typecheck
+npm run lint
+npm run build
+```
+
+### Supabase CLI が使えない環境での DB 検証
+
+Docker が無い環境でもスキーマ・RLS・シードを検証できるようにしてある。
+
+```bash
+# ローカル PostgreSQL を起動しておく (例: ポート 55432)
+npm run db:local      # マイグレーション適用 → RLSテスト → シード投入
+npm run verify:seed   # シードデータに評価エンジンを実際に適用して結果を検証
+```
+
+`db:local` は COACH が他コーチの顧客・売上へ到達できないこと、
+監査ログに変更前後が記録されることを DB レベルで検証する。
+`verify:seed` は DB → 評価 → 昇格判定までを通しで実行し、想定した結果になるか確認する。
+
+## 運用フロー
+
+```
+ADMINが顧客を登録 → 目標を承認 → コーチが成果を登録
+  → 満4ヶ月経過で自動的に評価対象 → 完全成果率・短期成果率を自動更新
+  → コーチが売上を登録 → 売上点・Professional Score を自動更新
+  → 月次締め (ADMIN操作 or Vercel Cron) でスナップショットを確定
+  → 3ヶ月平均・四半期ボーナス・昇格条件を自動判定
+  → コーチ画面に「現在地と次の条件」、ADMIN画面に全員比較を表示
+```
+
+月次締めは `/admin/close` から手動実行、または `/api/cron/monthly-close` を
+毎月1日に Vercel Cron から呼び出す (`vercel.json` に設定済み)。
+
+## 設計ドキュメント
+
+| ドキュメント | 内容 |
+|---|---|
+| [01-requirements.md](docs/01-requirements.md) | 要件理解 / 仕様の論点と確定した判断 |
+| [02-architecture.md](docs/02-architecture.md) | アーキテクチャ / レイヤ構成 / セキュリティ |
+| [03-er-and-schema.md](docs/03-er-and-schema.md) | ER図 / テーブル設計 |
+| [04-evaluation-logic.md](docs/04-evaluation-logic.md) | 評価ルールJSON / ロジック擬似コード |
+| [05-screens-and-plan.md](docs/05-screens-and-plan.md) | 画面一覧 / 実装Phase / リスク / スコープ |
