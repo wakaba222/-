@@ -1,7 +1,7 @@
 import { judgeCompleteSuccess } from '@/domain/evaluation';
 import type { DateOnly, GoalInput } from '@/domain/types';
 import { loadEvaluationRules, type Db } from '@/server/repositories/evaluationRepository';
-import type { CustomerGoalRow, CustomerRow, PerformanceRecordRow } from '@/lib/supabase/types';
+import type { CustomerGoalRow, CustomerRow } from '@/lib/supabase/types';
 import { yearMonthOf } from '@/domain/date';
 
 export interface RecordPerformanceInput {
@@ -53,8 +53,8 @@ export async function recordPerformance(db: Db, input: RecordPerformanceInput): 
     ? { goalType: goalRow.goal_type, targetScore: goalRow.target_score, targetDistance: goalRow.target_distance }
     : { goalType: customer.goal_type, targetScore: customer.target_score, targetDistance: customer.target_distance };
 
-  const meetsScore = goal.targetScore !== null && input.score !== null && input.score <= goal.targetScore;
-  const meetsDistance = goal.targetDistance !== null && input.distance !== null && input.distance >= goal.targetDistance;
+  // 実際に保存される達成フラグは DB のトリガが確定させる (クライアントの申告を信用しない)。
+  // ここでの判定は登録結果のメッセージ表示にのみ使う。
   const isCompleteSuccess = judgeCompleteSuccess({ score: input.score, distance: input.distance }, goal, rules);
 
   const { data: inserted, error: insertError } = await db
@@ -66,9 +66,6 @@ export async function recordPerformance(db: Db, input: RecordPerformanceInput): 
       recorded_on: input.recordedOn,
       score: input.score,
       distance: input.distance,
-      meets_score_goal: meetsScore,
-      meets_distance_goal: meetsDistance,
-      is_complete_success: isCompleteSuccess,
       note: input.note,
       created_by: input.createdBy,
     })
@@ -86,33 +83,13 @@ export async function recordPerformance(db: Db, input: RecordPerformanceInput): 
 }
 
 /**
- * 顧客側のキャッシュ列 (最新値・完全達成) を履歴から再計算する。
- * 記録の追加・訂正・削除のいずれの後にも呼べるようにしてある。
+ * 顧客側のキャッシュ列 (最新値・完全達成) を成果履歴から再計算する。
+ *
+ * customers への直接 UPDATE は ADMIN しか許可していないため、
+ * DB 側の security definer 関数を通して更新する。
+ * 記録の追加・訂正・取消のいずれの後にも呼べる。
  */
 export async function refreshCustomerAchievement(db: Db, customerId: string): Promise<void> {
-  const { data: records, error } = await db
-    .from('performance_records')
-    .select('id, customer_id, coach_id, recorded_on, score, distance, is_complete_success, note, created_at')
-    .eq('customer_id', customerId)
-    .is('deleted_at', null)
-    .order('recorded_on', { ascending: true })
-    .returns<PerformanceRecordRow[]>();
-  if (error) throw new Error(`成果履歴の取得に失敗しました: ${error.message}`);
-
-  const rows = records ?? [];
-  const achieving = rows.filter((r) => r.is_complete_success);
-  const firstAchievement = achieving[0] ?? null;
-  const latest = rows[rows.length - 1] ?? null;
-
-  const { error: updateError } = await db
-    .from('customers')
-    .update({
-      latest_score: latest?.score ?? null,
-      latest_distance: latest?.distance ?? null,
-      // ラチェット: 一度達成したら以降の記録が悪化しても取り消さない
-      complete_success: firstAchievement !== null,
-      complete_success_at: firstAchievement?.recorded_on ?? null,
-    })
-    .eq('id', customerId);
-  if (updateError) throw new Error(`顧客情報の更新に失敗しました: ${updateError.message}`);
+  const { error } = await db.rpc('refresh_customer_achievement', { p_customer_id: customerId });
+  if (error) throw new Error(`顧客情報の更新に失敗しました: ${error.message}`);
 }

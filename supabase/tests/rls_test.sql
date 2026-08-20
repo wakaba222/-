@@ -113,3 +113,88 @@ begin
 end $$;
 
 select 'RLS TEST PASSED' as result;
+
+-- ============================================================================
+-- 整合性トリガの検証
+-- クライアントが達成フラグやインセンティブ額を偽装できないことを確認する
+-- ============================================================================
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000c1';
+
+-- 目標未達なのに完全達成を申告しても、DB 側で false に矯正される
+do $$
+declare v_flag boolean;
+begin
+  insert into public.performance_records (customer_id, coach_id, recorded_on, score, is_complete_success)
+  values ('00000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000f1',
+          '2026-05-04', 130, true)
+  returning is_complete_success into v_flag;
+  assert v_flag = false, '未達の記録が完全達成として保存されてしまった';
+end $$;
+
+-- 目標達成の記録は申告が false でも true に矯正される
+do $$
+declare v_flag boolean;
+begin
+  insert into public.performance_records (customer_id, coach_id, recorded_on, score, is_complete_success)
+  values ('00000000-0000-0000-0000-0000000000d1', '00000000-0000-0000-0000-0000000000f1',
+          '2026-05-05', 90, false)
+  returning is_complete_success into v_flag;
+  assert v_flag = true, '達成した記録が未達として保存されてしまった';
+end $$;
+
+-- COACH は customers を直接更新できない (完全達成フラグの偽装を防ぐ)
+do $$
+declare v_updated int;
+begin
+  update public.customers set complete_success = true, complete_success_at = '2026-01-01'
+   where id = '00000000-0000-0000-0000-0000000000d1';
+  get diagnostics v_updated = row_count;
+  assert v_updated = 0, 'COACH が顧客の完全達成フラグを直接書き換えられてしまった';
+exception when insufficient_privilege then
+  null; -- 権限エラーで拒否されるのも期待どおり
+end $$;
+
+-- 更新経路は再計算関数のみ。履歴から達成日が導出される
+do $$
+declare v_success boolean; v_at date;
+begin
+  perform public.refresh_customer_achievement('00000000-0000-0000-0000-0000000000d1');
+  select complete_success, complete_success_at into v_success, v_at
+    from public.customers where id = '00000000-0000-0000-0000-0000000000d1';
+  assert v_success, '達成記録があるのに完全達成にならない';
+  assert v_at = '2026-05-03', format('達成日は最も古い達成記録の日付であるべき: %s', v_at);
+end $$;
+
+-- インセンティブ額は商品マスタの値で固定される (自己申告できない)
+do $$
+declare v_incentive integer;
+begin
+  insert into public.sales (coach_id, customer_id, product_id, sold_on, amount, incentive_amount)
+  values ('00000000-0000-0000-0000-0000000000f1', '00000000-0000-0000-0000-0000000000d1',
+          '00000000-0000-0000-0000-0000000000b1', '2026-05-09', 498000, 999999)
+  returning incentive_amount into v_incentive;
+  assert v_incentive = 10000, format('インセンティブ額が申告値のまま保存された: %s', v_incentive);
+end $$;
+
+-- 完全達成判定が TypeScript 側 (judgeCompleteSuccess) と同じ規則になっているか。
+-- src/domain/evaluation/evaluation.test.ts の「完全達成判定」と同じケースを並べている。
+set role postgres;
+do $$
+begin
+  -- スコアは目標以下で達成
+  assert app.judge_complete_success(98, null, 'SCORE', 100, null, 'ALL');
+  assert not app.judge_complete_success(101, null, 'SCORE', 100, null, 'ALL');
+  -- 飛距離は目標以上で達成
+  assert app.judge_complete_success(null, 255, 'DISTANCE', null, 250, 'ALL');
+  assert not app.judge_complete_success(null, 245, 'DISTANCE', null, 250, 'ALL');
+  -- BOTH は既定で両方必要
+  assert app.judge_complete_success(98, 255, 'BOTH', 100, 250, 'ALL');
+  assert not app.judge_complete_success(98, 240, 'BOTH', 100, 250, 'ALL');
+  -- ANY 設定なら片方で成立
+  assert app.judge_complete_success(98, 240, 'BOTH', 100, 250, 'ANY');
+  -- 値が無い場合は達成にしない
+  assert not app.judge_complete_success(null, null, 'SCORE', 100, null, 'ALL');
+end $$;
+
+select 'INTEGRITY TEST PASSED' as result;

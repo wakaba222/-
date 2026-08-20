@@ -93,6 +93,24 @@ export function evaluateCoachMonth(input: EvaluationInput): EvaluationResult
 6. **soft delete** (`deleted_at`)。物理削除はしない。
 7. **監査ログはDBトリガで強制**。アプリ経由を忘れても記録が漏れない設計にする。
 
+### 5-1. 「アプリを通さない書き込み」への防御
+
+COACH はブラウザから anon キーで PostgREST へ直接アクセスできる。
+そのため「アプリ経由なら正しい値が入る」だけでは不十分で、
+評価に直結する値はクライアントの申告を信用せず DB 側で導出する。
+
+| 値 | 防御 |
+|---|---|
+| 成果記録の完全達成フラグ | BEFORE トリガが「記録日時点で有効だった目標」から再判定して上書き |
+| 顧客の完全達成・達成日 | COACH は customers を UPDATE 不可。`refresh_customer_achievement()` (security definer) が履歴から再計算 |
+| 売上のインセンティブ額 | BEFORE トリガが商品マスタの成約時点の値で上書き |
+| 売上の取消・返金 | INSERT 時は必ず ACTIVE・返金0。状態変更は ADMIN の UPDATE のみ |
+
+判定規則は TypeScript (`judgeCompleteSuccess`) と SQL (`app.judge_complete_success`) の
+両方に存在するが、**保存される値の決定権は常に DB 側**にある。
+TS 側は画面の即時プレビュー用。両者が食い違わないよう、
+`supabase/tests/rls_test.sql` に TS 側の単体テストと同じケースを並べて検証している。
+
 ## 5. 監査ログ (仕様32章)
 
 `audit_logs (actor_user_id, entity_table, entity_id, action, before jsonb, after jsonb, reason, created_at)`
