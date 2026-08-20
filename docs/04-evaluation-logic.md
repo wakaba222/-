@@ -201,6 +201,21 @@ function calcCustomerSuccess(long, short) {
 
 ## 7. 売上点 — 仕様12,14,15章
 
+売上点の対象額は **税抜売上 − 返金の税抜相当額** (確定仕様)。
+決済手数料は会社側の利益管理に使い、コーチの売上Scoreからは控除しない。
+アンカー (200万 / 350万 / 500万) は税抜売上額の基準として扱う。
+
+```ts
+// 税込商品は売価から消費税を割り戻す。保存値はDBのトリガが確定させる
+taxAmount        = round(amount * taxRate / (1 + taxRate))   // 内税商品
+taxExclusive     = amount - taxAmount
+taxExclusiveRefund = round(refundAmount * taxExclusive / amount)
+評価対象額        = taxExclusive - taxExclusiveRefund
+
+// 例) BREAKTHROUGH 899,000円 (税込10%) を 400,000円 返金した場合
+//     税抜 817,273 − 返金の税抜相当 363,636 = 453,637 円
+```
+
 ```ts
 function calcSales(sales, period, rules) {
   const net = sales
