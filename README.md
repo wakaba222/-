@@ -111,11 +111,17 @@ npm run verify:seed   # シードデータに評価エンジンを実際に適�
 ### 実環境の検証
 
 ```bash
-npm run verify:remote
+npm run verify:remote   # データ層: 認証・RLS・評価・スナップショット・昇格判定
+npm run build && npm run e2e   # 画面: 実ブラウザでコーチ/ADMINの主要導線を確認
 ```
 
-認証 → RLS → 権限昇格の防止 → Professional Score 算出 → 月次スナップショット →
-昇格判定までを、実際の Supabase プロジェクトに対して順に確認する。
+`verify:remote` は認証 → RLS → 権限昇格の防止 → Professional Score 算出 →
+月次スナップショット → 昇格判定までを、実際の Supabase プロジェクトに対して順に確認する。
+
+`e2e` は本番ビルドを起動し、実ブラウザ (Chromium) で
+コーチのダッシュボード・成果登録・売上登録・スコア反映と、
+ADMIN の比較表・目標承認・昇格審査・月次締めを確認する。
+コーチ画面はスマートフォン (iPhone 14) の画面サイズでも検証する。
 
 ## 秘密情報の取り扱い
 

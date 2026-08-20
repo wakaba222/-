@@ -12,3 +12,5 @@ coverage/
 supabase/.temp/
 supabase/.branches/
 .verify/
+.playwright/
+e2e-screenshots/

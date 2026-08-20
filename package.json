@@ -18,7 +18,9 @@
     "scripts:build": "vite build --config scripts/build.config.ts",
     "seed:users": "npm run scripts:build && node --env-file=.env.local .verify/seed-users.js",
     "verify:remote": "npm run scripts:build && node --env-file=.env.local .verify/verify-remote.js",
-    "db:push": "npm run scripts:build && node --env-file=.env.local .verify/apply-sql.js"
+    "db:push": "npm run scripts:build && node --env-file=.env.local .verify/apply-sql.js",
+    "e2e": "playwright test",
+    "e2e:desktop": "playwright test --project=desktop"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -36,6 +38,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^24.10.1",
     "@types/pg": "^8.23.1",
