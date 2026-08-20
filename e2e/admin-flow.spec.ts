@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ADMIN_EMAIL, login } from './helpers';
+import { ADMIN_EMAIL, login, SCREENSHOT_DIR } from './helpers';
 
 test.describe('ADMIN画面', () => {
   test.skip(({ isMobile }) => isMobile === true, 'ADMIN画面はPC利用が前提');
@@ -17,7 +17,7 @@ test.describe('ADMIN画面', () => {
     await expect(rows).toHaveCount(3);
     await expect(page.getByText('候補').first()).toBeVisible();
 
-    await page.screenshot({ path: `${testInfo.outputDir}/../admin-dashboard.png`, fullPage: true });
+    await page.screenshot({ path: `${SCREENSHOT_DIR}/admin-dashboard.png`, fullPage: true });
   });
 
   test('顧客一覧・目標承認・昇格審査・月次締めの各画面が開ける', async ({ page }, testInfo) => {
@@ -25,14 +25,14 @@ test.describe('ADMIN画面', () => {
 
     await page.goto('/admin/customers');
     await expect(page.getByRole('heading', { name: '顧客一覧' })).toBeVisible();
-    await page.screenshot({ path: `${testInfo.outputDir}/../admin-customers.png`, fullPage: true });
+    await page.screenshot({ path: `${SCREENSHOT_DIR}/admin-customers.png`, fullPage: true });
 
     await page.goto('/admin/approvals');
     await expect(page.getByRole('heading', { name: '目標承認' })).toBeVisible();
 
     await page.goto('/admin/promotions');
     await expect(page.getByRole('heading', { name: '昇格候補' })).toBeVisible();
-    await page.screenshot({ path: `${testInfo.outputDir}/../admin-promotions.png`, fullPage: true });
+    await page.screenshot({ path: `${SCREENSHOT_DIR}/admin-promotions.png`, fullPage: true });
 
     await page.goto('/admin/close');
     await expect(page.getByRole('heading', { name: '月次締め' })).toBeVisible();
@@ -53,6 +53,7 @@ test.describe('ADMIN画面', () => {
     }
 
     await pendingRows.first().getByRole('button', { name: '承認する' }).click();
-    await expect(page.getByRole('status').first()).toContainText('承認しました');
+    // 承認された顧客は一覧から消える (評価対象に入る)
+    await expect(pendingRows).toHaveCount(count - 1);
   });
 });

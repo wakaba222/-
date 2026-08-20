@@ -1,5 +1,8 @@
 import { expect, type Page } from '@playwright/test';
 
+/** 実行のたびに消えないよう、スクリーンショットは固定ディレクトリへ出す */
+export const SCREENSHOT_DIR = 'e2e-screenshots';
+
 export const ADMIN_EMAIL = 'admin@eagle.example';
 export const COACH_EMAIL = 'tanaka@eagle.example';
 

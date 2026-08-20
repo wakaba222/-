@@ -1,6 +1,15 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
+ * この環境にはブラウザが事前導入されている。Playwright のバージョンが期待する
+ * ビルド番号と一致しないことがあるため、実体のパスを明示して起動する。
+ */
+const CHROMIUM_PATH = process.env.PLAYWRIGHT_CHROMIUM_PATH ?? '/opt/pw-browsers/chromium';
+
+/** CI コンテナは root で動くため、Chromium のサンドボックスを無効化して起動する */
+const LAUNCH_OPTIONS = { executablePath: CHROMIUM_PATH, args: ['--no-sandbox'] };
+
+/**
  * 実環境 (Supabase) に接続したアプリを、実ブラウザで通しで確認するための設定。
  * 事前に `npm run build` を済ませ、本番ビルドを起動して検証する。
  */
@@ -21,8 +30,16 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
-    { name: 'mobile', use: { ...devices['iPhone 14'] } },
+    {
+      name: 'desktop',
+      use: { ...devices['Desktop Chrome'], launchOptions: LAUNCH_OPTIONS },
+    },
+    {
+      // iPhone のデバイス定義は既定で WebKit を使うが、この環境には Chromium しか無い。
+      // 画面サイズとタッチ操作の条件だけを borrow して Chromium で実行する。
+      name: 'mobile',
+      use: { ...devices['iPhone 14'], browserName: 'chromium', launchOptions: LAUNCH_OPTIONS },
+    },
   ],
   webServer: process.env.E2E_BASE_URL
     ? undefined
