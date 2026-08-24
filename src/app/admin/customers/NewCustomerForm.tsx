@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useActionState, useState } from 'react';
 import type { GoalType } from '@/domain/types';
 import { todayInJst } from '@/domain/date';
@@ -12,6 +13,18 @@ import { createCustomerAction } from '@/server/actions/adminActions';
 export function NewCustomerForm({ coaches }: { coaches: { id: string; name: string }[] }) {
   const [state, formAction] = useActionState(createCustomerAction, INITIAL_ACTION_STATE);
   const [goalType, setGoalType] = useState<GoalType>('SCORE');
+
+  // 顧客には必ず担当コーチが要るため、先にコーチ登録へ誘導する
+  if (coaches.length === 0) {
+    return (
+      <p className="rounded-xl bg-warn-100 px-3 py-3 text-sm text-warn-600">
+        コーチが登録されていないため、顧客を登録できません。
+        <Link href="/admin/coaches" className="ml-1 underline underline-offset-2">
+          先にコーチを登録してください
+        </Link>
+      </p>
+    );
+  }
 
   const needsScore = goalType === 'SCORE' || goalType === 'BOTH';
   const needsDistance = goalType === 'DISTANCE' || goalType === 'BOTH';

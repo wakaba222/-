@@ -5,6 +5,7 @@ import { requireAdmin } from '@/server/auth';
 
 const NAV_ITEMS: NavItem[] = [
   { href: '/admin', label: 'ダッシュボード' },
+  { href: '/admin/coaches', label: 'コーチ' },
   { href: '/admin/customers', label: '顧客' },
   { href: '/admin/approvals', label: '目標承認' },
   { href: '/admin/promotions', label: '昇格審査' },

@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { addMonthsToYearMonth, isDateOnly, todayInJst, yearMonthOf } from '@/domain/date';
 import { evaluationRulesSchema } from '@/domain/evaluation';
 import { loadEvaluationRules } from '@/server/repositories/evaluationRepository';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/server/auth';
 import { fail, ok, type ActionResult } from '@/server/actionResult';
 import { closeMonth } from '@/server/services/monthlyCloseService';
@@ -550,4 +550,113 @@ export async function deletePerformanceRecordAction(
   await refreshCustomerAchievement(supabase, parsed.data.customerId);
   revalidatePath(`/admin/customers/${parsed.data.customerId}`);
   return ok('成果記録を取消しました');
+}
+
+// ---------------------------------------------------------------------------
+// コーチ管理 (仕様18章: コーチ追加・編集)
+// ---------------------------------------------------------------------------
+
+const coachSchema = z.object({
+  name: z.string().min(1, '氏名を入力してください').max(100),
+  email: z.string().email('メールアドレスの形式が正しくありません'),
+  level: z.enum(['P1', 'P2', 'P3', 'P4']),
+  hireDate: dateOnly,
+});
+
+/** 初回ログイン用のパスワード。管理者が本人へ伝え、本人が変更する前提 */
+function generateTemporaryPassword(): string {
+  // 紛らわしい文字 (0/O/1/l/I) を除いた文字集合
+  const alphabet = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  const bytes = crypto.getRandomValues(new Uint8Array(14));
+  const body = [...bytes].map((b) => alphabet[b % alphabet.length]).join('');
+  // 記号と数字を必ず含める (パスワードポリシー対策)
+  return `Eg${body}#7`;
+}
+
+export async function createCoachAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  await requireAdmin();
+  const parsed = coachSchema.safeParse({
+    name: formData.get('name'),
+    email: formData.get('email'),
+    level: formData.get('level'),
+    hireDate: formData.get('hireDate'),
+  });
+  if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? '入力内容を確認してください');
+
+  const { name, email, level, hireDate } = parsed.data;
+  const supabase = await createSupabaseServerClient();
+
+  const { data: existing } = await supabase.from('users').select('id').ilike('email', email).maybeSingle<{ id: string }>();
+  if (existing) return fail('このメールアドレスは既に登録されています');
+
+  // ログインアカウントの作成には管理者権限が要るため、サーバー側のサービスロールで行う
+  const admin = createSupabaseServiceClient();
+  const password = generateTemporaryPassword();
+  const { data: created, error: authError } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { name, role: 'COACH' },
+  });
+  if (authError || !created.user) {
+    return fail(`ログインアカウントの作成に失敗しました: ${authError?.message ?? '不明なエラー'}`);
+  }
+
+  // プロフィール行は auth のトリガが作る。ロールと氏名を確定させる
+  const { error: profileError } = await admin
+    .from('users')
+    .update({ name, role: 'COACH' })
+    .eq('id', created.user.id);
+  if (profileError) return fail(`プロフィールの更新に失敗しました: ${profileError.message}`);
+
+  const rules = await loadEvaluationRules(supabase, { yearMonth: yearMonthOf(todayInJst()) });
+  const { error: coachError } = await supabase.from('coaches').insert({
+    user_id: created.user.id,
+    professional_level: level,
+    lesson_unit_price: rules.lessonUnitPrice[level],
+    hire_date: hireDate,
+  });
+  if (coachError) {
+    // コーチ行を作れなかった場合、ログインだけ残ると不整合になるため取り消す
+    await admin.auth.admin.deleteUser(created.user.id);
+    return fail(`コーチの登録に失敗しました: ${coachError.message}`);
+  }
+
+  revalidatePath('/admin');
+  revalidatePath('/admin/coaches');
+  return ok(`${name}さんを登録しました。初回ログイン用パスワード: ${password}（本人へ伝え、変更を依頼してください）`);
+}
+
+const coachUpdateSchema = z.object({
+  coachId: z.string().uuid(),
+  level: z.enum(['P1', 'P2', 'P3', 'P4']),
+  lessonUnitPrice: z.coerce.number().int().min(0).max(1_000_000),
+  leftOn: z.string().optional(),
+});
+
+export async function updateCoachAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  await requireAdmin();
+  const parsed = coachUpdateSchema.safeParse({
+    coachId: formData.get('coachId'),
+    level: formData.get('level'),
+    lessonUnitPrice: formData.get('lessonUnitPrice'),
+    leftOn: formData.get('leftOn') ?? '',
+  });
+  if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? '入力内容を確認してください');
+  if (parsed.data.leftOn && !isDateOnly(parsed.data.leftOn)) return fail('退職日の形式が正しくありません');
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from('coaches')
+    .update({
+      professional_level: parsed.data.level,
+      lesson_unit_price: parsed.data.lessonUnitPrice,
+      left_on: parsed.data.leftOn ? parsed.data.leftOn : null,
+    })
+    .eq('id', parsed.data.coachId);
+  if (error) return fail(`コーチ情報の更新に失敗しました: ${error.message}`);
+
+  revalidatePath('/admin');
+  revalidatePath(`/admin/coaches/${parsed.data.coachId}`);
+  return ok('コーチ情報を更新しました');
 }

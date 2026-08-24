@@ -14,6 +14,7 @@ import { buildCustomerViews, CUSTOMER_VIEW_COLUMNS } from '@/server/services/cus
 import { formatManYen, formatRate, formatScore, formatYen } from '@/lib/format';
 import type { CoachWithUserRow, CustomerRow } from '@/lib/supabase/types';
 import { BehaviorStatusForm } from './BehaviorStatusForm';
+import { CoachSettingsForm } from './CoachSettingsForm';
 
 export default async function AdminCoachDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -91,7 +92,19 @@ export default async function AdminCoachDetailPage({ params }: { params: Promise
       </div>
 
       <Card>
-        <CardHeader title="行動ルール (EAGLE)" description="NG の場合は昇格できません" />
+        <CardHeader title="ランク・単価・在籍" description="昇格承認とは別に、ADMINが直接変更できます" />
+        <CardBody>
+          <CoachSettingsForm
+            coachId={coach.id}
+            level={coach.professional_level}
+            lessonUnitPrice={coach.lesson_unit_price}
+            leftOn={coach.left_on}
+          />
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader title="行動ルール (EAGLE)" description="NG の場合は昇格できません (WARNING も昇格不可)" />
         <CardBody>
           <BehaviorStatusForm
             coachId={coach.id}

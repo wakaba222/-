@@ -76,14 +76,24 @@ Supabase CLI が使える環境なら `supabase db reset` でも migrations を�
 
 ### デモアカウント
 
+`npm run seed:users` と `supabase/seed.sql` で作られる検証用のデータ。
+本番運用を始める際は削除する (下記「運用開始時の手順」)。
+
 | 役割 | メール | 想定される状態 |
 |---|---|---|
 | ADMIN | `admin@eagle.example` | 全体管理 |
-| COACH | `tanaka@eagle.example` | P2・**P3昇格候補** (Score 108.5 / 完全成果率90%) |
-| COACH | `sato@eagle.example` | P1・基準未達 (Score 50.2 / 行動ルール WARNING) |
-| COACH | `suzuki@eagle.example` | P3・最高評価 (Score 120 / 事業成果要件が未承認で昇格不可) |
+| COACH | `tanaka@eagle.example` | P2・**P3昇格候補** |
+| COACH | `sato@eagle.example` | P1・基準未達 (行動ルール WARNING) |
+| COACH | `suzuki@eagle.example` | P3・最高評価 |
 
 パスワードは `DEMO_USER_PASSWORD` に設定した値 (デモ環境専用)。
+
+### 運用開始時の手順
+
+1. ADMIN でログインし、**コーチ**画面から実際のコーチを登録する
+   (ログインアカウントも同時に作成され、初回パスワードが一度だけ表示される)
+2. **顧客**画面から顧客を登録し、**目標承認**で目標を承認する
+3. デモデータを削除する (`npm run demo:purge`)
 
 ## テスト
 

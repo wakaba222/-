@@ -20,7 +20,8 @@
     "verify:remote": "npm run scripts:build && NODE_USE_ENV_PROXY=1 node --env-file=.env.local .verify/verify-remote.js",
     "db:push": "npm run scripts:build && NODE_USE_ENV_PROXY=1 node --env-file=.env.local .verify/apply-sql.js",
     "e2e": "playwright test",
-    "e2e:desktop": "playwright test --project=desktop"
+    "e2e:desktop": "playwright test --project=desktop",
+    "demo:purge": "npm run scripts:build && NODE_USE_ENV_PROXY=1 node --env-file=.env.local .verify/purge-demo-data.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
