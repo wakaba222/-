@@ -1,7 +1,7 @@
 import type { ActionResult } from '@/server/actionResult';
 
 /** Server Action の結果表示。成功・失敗のどちらも必ず理由を出す */
-export function FormMessage({ state }: { state: ActionResult | null }) {
+export function FormMessage({ state }: { state: ActionResult<unknown> | null }) {
   if (!state) return null;
 
   const isError = !state.ok;

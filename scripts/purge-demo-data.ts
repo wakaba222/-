@@ -64,6 +64,12 @@ async function main(): Promise<void> {
     console.log(`削除: ${table}`);
   }
 
+  // 監査ログは実行者を参照している。履歴を残す場合でもアカウントは消せるよう、参照だけ外す
+  for (const user of targets) {
+    const { error } = await admin.from('audit_logs').update({ actor_user_id: null }).eq('actor_user_id', user.id);
+    if (error) throw new Error(`監査ログの実行者の付け替えに失敗しました: ${error.message}`);
+  }
+
   for (const user of targets) {
     const { error } = await admin.auth.admin.deleteUser(user.id);
     if (error) throw new Error(`${user.email} の削除に失敗しました: ${error.message}`);

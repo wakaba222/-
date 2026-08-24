@@ -573,7 +573,16 @@ function generateTemporaryPassword(): string {
   return `Eg${body}#7`;
 }
 
-export async function createCoachAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+/** 登録直後に一度だけ画面へ渡す初回ログイン情報 */
+export interface CreatedCoachCredentials {
+  email: string;
+  password: string;
+}
+
+export async function createCoachAction(
+  _prev: ActionResult<CreatedCoachCredentials> | null,
+  formData: FormData,
+): Promise<ActionResult<CreatedCoachCredentials>> {
   await requireAdmin();
   const parsed = coachSchema.safeParse({
     name: formData.get('name'),
@@ -624,7 +633,8 @@ export async function createCoachAction(_prev: ActionResult | null, formData: Fo
 
   revalidatePath('/admin');
   revalidatePath('/admin/coaches');
-  return ok(`${name}さんを登録しました。初回ログイン用パスワード: ${password}（本人へ伝え、変更を依頼してください）`);
+  // パスワードは画面で一度だけ表示する。文章に混ぜるとコピーしづらいため個別に返す
+  return ok(`${name}さんを登録しました`, { email, password });
 }
 
 const coachUpdateSchema = z.object({
