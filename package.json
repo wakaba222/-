@@ -21,7 +21,8 @@
     "db:push": "npm run scripts:build && NODE_USE_ENV_PROXY=1 node --env-file=.env.local .verify/apply-sql.js",
     "e2e": "playwright test",
     "e2e:desktop": "playwright test --project=desktop",
-    "demo:purge": "npm run scripts:build && NODE_USE_ENV_PROXY=1 node --env-file=.env.local .verify/purge-demo-data.js"
+    "demo:purge": "npm run scripts:build && NODE_USE_ENV_PROXY=1 node --env-file=.env.local .verify/purge-demo-data.js",
+    "coaches:create": "npm run scripts:build && NODE_USE_ENV_PROXY=1 node --env-file=.env.local .verify/create-coaches.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

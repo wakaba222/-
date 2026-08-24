@@ -19,6 +19,7 @@ export default defineConfig({
         'verify-remote': fileURLToPath(new URL('./verify-remote.ts', import.meta.url)),
         'apply-sql': fileURLToPath(new URL('./apply-sql.ts', import.meta.url)),
         'purge-demo-data': fileURLToPath(new URL('./purge-demo-data.ts', import.meta.url)),
+        'create-coaches': fileURLToPath(new URL('./create-coaches.ts', import.meta.url)),
       },
     },
   },
