@@ -46,9 +46,14 @@ test.describe('COACHは設定を変更できない', () => {
       const adminLinks = page.locator('a[href^="/admin"]');
       await expect(adminLinks, `${path} に管理画面へのリンクがある`).toHaveCount(0);
 
-      // 設定変更を思わせる操作が並んでいないこと
-      const settingsWords = /評価ルール|商品マスタ|インセンティブ設定|ランク変更|レッスン単価|行動ルールを設定|昇格を承認|月次締め|監査ログ/;
-      await expect(page.getByText(settingsWords), `${path} に設定変更のUIがある`).toHaveCount(0);
+      // 設定を変える「操作」が置かれていないこと。
+      // 説明文に制度の用語が出るのは正常なので、押せるもの (リンク・ボタン) だけを見る。
+      const settingsWords =
+        /評価ルール|商品マスタ|インセンティブ設定|ランク変更|レッスン単価|行動ルール|昇格を承認|承認する|月次締め|監査ログ|締める/;
+      const settingsControls = page
+        .getByRole('link', { name: settingsWords })
+        .or(page.getByRole('button', { name: settingsWords }));
+      await expect(settingsControls, `${path} に設定変更の操作がある`).toHaveCount(0);
     }
   });
 
