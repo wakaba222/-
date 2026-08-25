@@ -1,7 +1,7 @@
 import type { BehaviorStatus, ProfessionalLevel, PromotionStatus, YearMonth } from '@/domain/types';
 import type { CoachWithUserRow } from '@/lib/supabase/types';
 import type { Db } from '@/server/repositories/evaluationRepository';
-import { currentYearMonth, getCoachOverview } from './evaluationService';
+import { currentYearMonth, getCoachOverviews } from './evaluationService';
 
 export interface AdminCoachRow {
   coachId: string;
@@ -44,9 +44,18 @@ export async function buildAdminCoachRows(
 ): Promise<AdminCoachRow[]> {
   const coaches = await loadAdminCoaches(db);
 
-  const rows = await Promise.all(
-    coaches.map(async (coach) => {
-      const overview = await getCoachOverview(db, coach.id, coach.professional_level, yearMonth);
+  // コーチ数ぶんの往復を避けるため、必要なテーブルを 1 回ずつまとめて取得する。
+  // 組み立てはコーチ画面と同じ処理を通るので、一覧と個票で数字が食い違わない。
+  const overviews = await getCoachOverviews(
+    db,
+    coaches.map((coach) => ({ id: coach.id, level: coach.professional_level })),
+    yearMonth,
+  );
+
+  const rows = coaches
+    .map((coach) => {
+      const overview = overviews.get(coach.id);
+      if (!overview) return null;
       const { customerSuccess, professional } = overview.evaluation;
 
       return {
@@ -69,8 +78,8 @@ export async function buildAdminCoachRows(
         promotionShortfalls: overview.promotion.shortfalls.length,
         behaviorStatus: overview.behaviorStatus,
       } satisfies AdminCoachRow;
-    }),
-  );
+    })
+    .filter((row): row is AdminCoachRow => row !== null);
 
   // スコアの高い順。N/A は末尾に置く
   return rows.sort((a, b) => (b.professionalScore ?? -1) - (a.professionalScore ?? -1));

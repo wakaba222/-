@@ -1,16 +1,23 @@
 import { createServerClient } from '@supabase/ssr';
+import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import { publicEnv, requireServiceRoleKey } from '@/lib/env';
+import { createInstrumentedFetch, isPerfDebugEnabled } from '@/lib/perf';
 
 /**
  * サーバー側 Supabase クライアント。
  * ログインユーザーの JWT で接続するため、RLS がそのまま効く。
+ *
+ * React の cache() で 1 リクエスト 1 インスタンスに固定している。
+ * layout と page が別々に呼んでも同じクライアントを共有するため、
+ * セッション確認の往復が二重に発生しない (権限判定は各画面と RLS がそのまま行う)。
  */
-export async function createSupabaseServerClient() {
+export const createSupabaseServerClient = cache(async function createSupabaseServerClient() {
   const cookieStore = await cookies();
 
   return createServerClient(publicEnv.NEXT_PUBLIC_SUPABASE_URL, publicEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+    ...(isPerfDebugEnabled() ? { global: { fetch: createInstrumentedFetch('server') } } : {}),
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -27,7 +34,7 @@ export async function createSupabaseServerClient() {
       },
     },
   });
-}
+});
 
 /**
  * RLS をバイパスするサービスロールクライアント。
@@ -37,5 +44,6 @@ export async function createSupabaseServerClient() {
 export function createSupabaseServiceClient() {
   return createClient(publicEnv.NEXT_PUBLIC_SUPABASE_URL, requireServiceRoleKey(), {
     auth: { autoRefreshToken: false, persistSession: false },
+    ...(isPerfDebugEnabled() ? { global: { fetch: createInstrumentedFetch('service') } } : {}),
   });
 }

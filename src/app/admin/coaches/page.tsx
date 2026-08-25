@@ -11,13 +11,15 @@ import { NewCoachForm } from './NewCoachForm';
 export default async function AdminCoachesPage() {
   await requireAdmin();
   const supabase = await createSupabaseServerClient();
-  const coaches = await loadAdminCoaches(supabase);
-
-  const { data: customerCounts } = await supabase
-    .from('customers')
-    .select('current_coach_id')
-    .is('deleted_at', null)
-    .returns<{ current_coach_id: string | null }[]>();
+  // 互いに依存しないので並列に取る (直列にすると往復1回ぶん待たされる)
+  const [coaches, { data: customerCounts }] = await Promise.all([
+    loadAdminCoaches(supabase),
+    supabase
+      .from('customers')
+      .select('current_coach_id')
+      .is('deleted_at', null)
+      .returns<{ current_coach_id: string | null }[]>(),
+  ]);
 
   const countByCoach = new Map<string, number>();
   for (const row of customerCounts ?? []) {

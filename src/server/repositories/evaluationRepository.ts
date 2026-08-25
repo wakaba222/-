@@ -91,6 +91,11 @@ function toSaleInput(row: SaleRow): SaleEvaluationInput {
   };
 }
 
+const SALES_COLUMNS =
+  'id, coach_id, customer_id, product_id, sold_on, amount, incentive_amount, acquisition_source, ' +
+  'payment_source, status, refund_amount, tax_amount, payment_fee, net_amount, note, ' +
+  'products(id, name, code, is_sales_score_target)';
+
 const CUSTOMER_COLUMNS =
   'id, name, current_coach_id, program_start_date, program_end_date, status, status_changed_on, ' +
   'cancel_reason_code, suspended_days, start_score, target_score, start_distance, target_distance, ' +
@@ -103,22 +108,25 @@ const CUSTOMER_COLUMNS =
  * 現担当だけでなく担当履歴も見て集合を決める (仕様37章)。
  */
 export async function loadEvaluationCustomers(db: Db, coachId: string): Promise<CustomerEvaluationInput[]> {
-  const { data: coachAssignments, error: assignmentError } = await db
-    .from('customer_coach_assignments')
-    .select('customer_id')
-    .eq('coach_id', coachId)
-    .returns<{ customer_id: string }[]>();
+  // 担当履歴と現担当顧客は互いに依存しないので並列に取る
+  const [{ data: coachAssignments, error: assignmentError }, { data: currentRows, error: currentError }] =
+    await Promise.all([
+      db
+        .from('customer_coach_assignments')
+        .select('customer_id')
+        .eq('coach_id', coachId)
+        .returns<{ customer_id: string }[]>(),
+      db
+        .from('customers')
+        .select(CUSTOMER_COLUMNS)
+        .eq('current_coach_id', coachId)
+        .is('deleted_at', null)
+        .returns<CustomerRow[]>(),
+    ]);
   if (assignmentError) throw new Error(`担当履歴の取得に失敗しました: ${assignmentError.message}`);
+  if (currentError) throw new Error(`顧客の取得に失敗しました: ${currentError.message}`);
 
   const historicalIds = [...new Set((coachAssignments ?? []).map((a) => a.customer_id))];
-
-  const { data: currentRows, error: currentError } = await db
-    .from('customers')
-    .select(CUSTOMER_COLUMNS)
-    .eq('current_coach_id', coachId)
-    .is('deleted_at', null)
-    .returns<CustomerRow[]>();
-  if (currentError) throw new Error(`顧客の取得に失敗しました: ${currentError.message}`);
 
   const byId = new Map<string, CustomerRow>();
   for (const row of currentRows ?? []) byId.set(row.id, row);
@@ -175,11 +183,7 @@ export async function loadEvaluationSales(
 
   const { data, error } = await db
     .from('sales')
-    .select(
-      'id, coach_id, customer_id, product_id, sold_on, amount, incentive_amount, acquisition_source, ' +
-        'payment_source, status, refund_amount, tax_amount, payment_fee, net_amount, note, ' +
-        'products(id, name, code, is_sales_score_target)',
-    )
+    .select(SALES_COLUMNS)
     .eq('coach_id', coachId)
     .gte('sold_on', from)
     .lte('sold_on', to)
@@ -215,4 +219,160 @@ export async function loadSnapshotSummaries(
     longTermSuccessRate: row.long_term_success_rate,
     isEvaluable: row.is_evaluable,
   }));
+}
+
+// ---------------------------------------------------------------------------
+// 一括取得 (ADMIN の一覧用)
+//
+// 単体版をコーチ数ぶん呼ぶとテーブルごとに人数分の往復が発生する。
+// ここではテーブルごとに 1 回だけ問い合わせ、コーチ単位に振り分ける。
+// 振り分け後の絞り込み条件は単体版と同じにしてあるため、結果は一致する。
+// ---------------------------------------------------------------------------
+
+/** コーチID単位の顧客一覧。単体版 loadEvaluationCustomers と同じ集合を返す */
+export async function loadEvaluationCustomersByCoach(
+  db: Db,
+  coachIds: string[],
+): Promise<Map<string, CustomerEvaluationInput[]>> {
+  const result = new Map<string, CustomerEvaluationInput[]>();
+  for (const id of coachIds) result.set(id, []);
+  if (coachIds.length === 0) return result;
+
+  const [{ data: coachAssignments, error: assignmentError }, { data: currentRows, error: currentError }] =
+    await Promise.all([
+      db
+        .from('customer_coach_assignments')
+        .select('customer_id, coach_id')
+        .in('coach_id', coachIds)
+        .returns<{ customer_id: string; coach_id: string }[]>(),
+      db
+        .from('customers')
+        .select(CUSTOMER_COLUMNS)
+        .in('current_coach_id', coachIds)
+        .is('deleted_at', null)
+        .returns<CustomerRow[]>(),
+    ]);
+  if (assignmentError) throw new Error(`担当履歴の取得に失敗しました: ${assignmentError.message}`);
+  if (currentError) throw new Error(`顧客の取得に失敗しました: ${currentError.message}`);
+
+  // コーチごとの「過去に担当した顧客ID」
+  const historicalByCoach = new Map<string, Set<string>>();
+  for (const id of coachIds) historicalByCoach.set(id, new Set());
+  for (const a of coachAssignments ?? []) historicalByCoach.get(a.coach_id)?.add(a.customer_id);
+
+  const byId = new Map<string, CustomerRow>();
+  for (const row of currentRows ?? []) byId.set(row.id, row);
+
+  const missingIds = [...new Set([...historicalByCoach.values()].flatMap((set) => [...set]))].filter(
+    (id) => !byId.has(id),
+  );
+  if (missingIds.length > 0) {
+    const { data: pastRows, error: pastError } = await db
+      .from('customers')
+      .select(CUSTOMER_COLUMNS)
+      .in('id', missingIds)
+      .is('deleted_at', null)
+      .returns<CustomerRow[]>();
+    if (pastError) throw new Error(`過去担当顧客の取得に失敗しました: ${pastError.message}`);
+    for (const row of pastRows ?? []) byId.set(row.id, row);
+  }
+
+  const candidateIds = [...byId.keys()];
+  if (candidateIds.length === 0) return result;
+
+  const { data: allAssignments, error: allAssignmentError } = await db
+    .from('customer_coach_assignments')
+    .select('customer_id, coach_id, start_date, end_date')
+    .in('customer_id', candidateIds)
+    .returns<{ customer_id: string; coach_id: string; start_date: string; end_date: string | null }[]>();
+  if (allAssignmentError) throw new Error(`担当履歴の取得に失敗しました: ${allAssignmentError.message}`);
+
+  const assignmentsByCustomer = new Map<string, AssignmentPeriod[]>();
+  for (const a of allAssignments ?? []) {
+    const list = assignmentsByCustomer.get(a.customer_id) ?? [];
+    list.push({ customerId: a.customer_id, coachId: a.coach_id, startDate: a.start_date, endDate: a.end_date });
+    assignmentsByCustomer.set(a.customer_id, list);
+  }
+
+  // 達成日時点の担当コーチへ帰属させる (仕様37章)。判定は単体版と同一。
+  for (const row of byId.values()) {
+    const responsible = resolveResponsibleCoachId(
+      assignmentsByCustomer.get(row.id) ?? [],
+      row.complete_success_at,
+      row.current_coach_id,
+    );
+    if (responsible === null) continue;
+    const bucket = result.get(responsible);
+    if (!bucket) continue;
+    // 単体版の候補集合 = 現担当 ∪ 担当履歴。そこに含まれない顧客は数えない。
+    const isCandidate = row.current_coach_id === responsible || historicalByCoach.get(responsible)?.has(row.id);
+    if (isCandidate) bucket.push(toCustomerInput(row));
+  }
+
+  return result;
+}
+
+/** コーチID単位の直近12ヶ月の売上 */
+export async function loadEvaluationSalesByCoach(
+  db: Db,
+  coachIds: string[],
+  yearMonth: YearMonth,
+): Promise<Map<string, SaleEvaluationInput[]>> {
+  const result = new Map<string, SaleEvaluationInput[]>();
+  for (const id of coachIds) result.set(id, []);
+  if (coachIds.length === 0) return result;
+
+  const from = startOfMonth(addMonthsToYearMonth(yearMonth, -(SALES_LOOKBACK_MONTHS - 1)));
+  const to = endOfMonth(yearMonth);
+
+  const { data, error } = await db
+    .from('sales')
+    .select(SALES_COLUMNS)
+    .in('coach_id', coachIds)
+    .gte('sold_on', from)
+    .lte('sold_on', to)
+    .is('deleted_at', null)
+    .returns<SaleRow[]>();
+  if (error) throw new Error(`売上の取得に失敗しました: ${error.message}`);
+
+  for (const row of data ?? []) result.get(row.coach_id)?.push(toSaleInput(row));
+  return result;
+}
+
+/** コーチID単位の確定スナップショット (年月の昇順) */
+export async function loadSnapshotSummariesByCoach(
+  db: Db,
+  coachIds: string[],
+  yearMonth: YearMonth,
+  months: number,
+): Promise<Map<string, SnapshotSummary[]>> {
+  const result = new Map<string, SnapshotSummary[]>();
+  for (const id of coachIds) result.set(id, []);
+  if (coachIds.length === 0) return result;
+
+  const from = addMonthsToYearMonth(yearMonth, -(months - 1));
+
+  const { data, error } = await db
+    .from('latest_evaluation_snapshots')
+    .select('coach_id, year_month, professional_score, long_term_success_rate, is_evaluable')
+    .in('coach_id', coachIds)
+    .gte('year_month', from)
+    .lte('year_month', yearMonth)
+    .order('year_month', { ascending: true })
+    .returns<
+      (Pick<EvaluationSnapshotRow, 'year_month' | 'professional_score' | 'long_term_success_rate' | 'is_evaluable'> & {
+        coach_id: string;
+      })[]
+    >();
+  if (error) throw new Error(`評価スナップショットの取得に失敗しました: ${error.message}`);
+
+  for (const row of data ?? []) {
+    result.get(row.coach_id)?.push({
+      yearMonth: row.year_month,
+      professionalScore: row.professional_score,
+      longTermSuccessRate: row.long_term_success_rate,
+      isEvaluable: row.is_evaluable,
+    });
+  }
+  return result;
 }
