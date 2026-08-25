@@ -9,7 +9,7 @@ import { maxProfessionalScore } from '@/domain/evaluation';
 import { CustomerTable } from '@/components/CustomerTable';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { requireAdmin } from '@/server/auth';
-import { getCoachOverview } from '@/server/services/evaluationService';
+import { coachRefOf, getCoachOverview } from '@/server/services/evaluationService';
 import { buildCustomerViews, CUSTOMER_VIEW_COLUMNS } from '@/server/services/customerViewService';
 import { formatManYen, formatRate, formatScore, formatYen } from '@/lib/format';
 import type { CoachWithUserRow, CustomerRow } from '@/lib/supabase/types';
@@ -28,7 +28,7 @@ export default async function AdminCoachDetailPage({ params }: { params: Promise
     .maybeSingle<CoachWithUserRow>();
   if (!coach) notFound();
 
-  const overview = await getCoachOverview(supabase, coach.id, coach.professional_level);
+  const overview = await getCoachOverview(supabase, coachRefOf(coach));
 
   const { data: customerRows } = await supabase
     .from('customers')

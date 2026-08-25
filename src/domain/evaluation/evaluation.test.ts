@@ -15,6 +15,8 @@ import {
   aggregateSales,
   monthPeriod,
   resolveResponsibleCoachId,
+  resolveLessonUnitPrice,
+  estimateMonthlyCompensation,
 } from './index';
 import { endOfMonth } from '../date';
 import type {
@@ -486,5 +488,40 @@ describe('成果の帰属 (担当変更)', () => {
 
   it('担当履歴が無い場合は現担当にフォールバックする', () => {
     expect(resolveResponsibleCoachId([], '2026-03-10', 'fallback')).toBe('fallback');
+  });
+});
+
+describe('レッスン単価の決め方', () => {
+  const rules = RULES;
+
+  it('コーチ個別の単価が設定されていれば、それを使う', () => {
+    // 同じ P1 でも人によって単価を変えられる (松本さん 12,000 / 他 10,000 のような運用)
+    expect(resolveLessonUnitPrice(12_000, 'P1', rules)).toBe(12_000);
+    expect(resolveLessonUnitPrice(10_000, 'P1', rules)).toBe(10_000);
+  });
+
+  it('個別の単価が未設定なら、ランク別の既定単価を使う', () => {
+    expect(resolveLessonUnitPrice(null, 'P2', rules)).toBe(rules.lessonUnitPrice.P2);
+    expect(resolveLessonUnitPrice(undefined, 'P3', rules)).toBe(rules.lessonUnitPrice.P3);
+    expect(resolveLessonUnitPrice(0, 'P4', rules)).toBe(rules.lessonUnitPrice.P4);
+  });
+
+  it('想定報酬にコーチ個別の単価が反映される', () => {
+    const withOwnPrice = estimateMonthlyCompensation('P1', 30, 0, 0, rules, 12_000);
+    expect(withOwnPrice.lessonUnitPrice).toBe(12_000);
+    expect(withOwnPrice.lessonReward).toBe(360_000);
+
+    const withRankPrice = estimateMonthlyCompensation('P2', 30, 0, 0, rules);
+    expect(withRankPrice.lessonUnitPrice).toBe(rules.lessonUnitPrice.P2);
+    expect(withRankPrice.lessonReward).toBe(30 * rules.lessonUnitPrice.P2);
+  });
+
+  it('単価はProfessional Scoreにも昇格判定にも影響しない', () => {
+    // 報酬は参考表示のみ。評価軸 (顧客成果・売上) に単価は入らない。
+    const cheap = estimateMonthlyCompensation('P1', 30, 0, 0, rules, 10_000);
+    const expensive = estimateMonthlyCompensation('P1', 30, 0, 0, rules, 12_000);
+    expect(cheap.incentiveTotal).toBe(expensive.incentiveTotal);
+    expect(cheap.bonusAmount).toBe(expensive.bonusAmount);
+    expect(expensive.total - cheap.total).toBe(30 * 2_000);
   });
 });

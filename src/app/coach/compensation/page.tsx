@@ -1,7 +1,7 @@
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { requireCoach } from '@/server/auth';
-import { currentYearMonth, getCoachOverview } from '@/server/services/evaluationService';
+import { coachRefOf, currentYearMonth, getCoachOverview } from '@/server/services/evaluationService';
 import { formatYearMonth, formatYen } from '@/lib/format';
 import { LessonCountForm } from './LessonCountForm';
 
@@ -9,7 +9,7 @@ export default async function CompensationPage() {
   const session = await requireCoach();
   const supabase = await createSupabaseServerClient();
   const yearMonth = currentYearMonth();
-  const overview = await getCoachOverview(supabase, session.coach.id, session.coach.professional_level, yearMonth);
+  const overview = await getCoachOverview(supabase, coachRefOf(session.coach), yearMonth);
   const { compensation } = overview;
 
   return (

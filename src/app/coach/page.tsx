@@ -8,14 +8,14 @@ import { maxProfessionalScore } from '@/domain/evaluation';
 import { NotificationList } from '@/components/NotificationList';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { requireCoach } from '@/server/auth';
-import { getCoachOverview } from '@/server/services/evaluationService';
+import { coachRefOf, getCoachOverview } from '@/server/services/evaluationService';
 import { formatManYen, formatRate, formatScore, formatYearMonth, formatYen } from '@/lib/format';
 import type { NotificationRow } from '@/lib/supabase/types';
 
 export default async function CoachDashboardPage() {
   const session = await requireCoach();
   const supabase = await createSupabaseServerClient();
-  const overview = await getCoachOverview(supabase, session.coach.id, session.coach.professional_level);
+  const overview = await getCoachOverview(supabase, coachRefOf(session.coach));
 
   const { data: notifications } = await supabase
     .from('notifications')

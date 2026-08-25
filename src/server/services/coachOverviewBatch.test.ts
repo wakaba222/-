@@ -170,8 +170,9 @@ function buildTables() {
 }
 
 const COACHES = [
-  { id: 'coach-a', level: 'P1' as const },
-  { id: 'coach-b', level: 'P2' as const },
+  // coach-a は個別単価あり / coach-b は未設定 (ランク別単価にフォールバック)
+  { id: 'coach-a', level: 'P1' as const, lessonUnitPrice: 12_000 },
+  { id: 'coach-b', level: 'P2' as const, lessonUnitPrice: 0 },
 ];
 
 describe('一括取得の問い合わせ本数', () => {
@@ -191,11 +192,11 @@ describe('一括取得の問い合わせ本数', () => {
     // 対比: 単体取得を人数ぶん回すと本数は人数に比例して増える
     const perTwo: string[] = [];
     const dbTwo = createFakeDb(buildTables(), perTwo);
-    for (const coach of COACHES) await getCoachOverview(dbTwo, coach.id, coach.level, YEAR_MONTH);
+    for (const coach of COACHES) await getCoachOverview(dbTwo, coach, YEAR_MONTH);
 
     const perTen: string[] = [];
     const dbTen = createFakeDb(buildTables(), perTen);
-    for (const coach of tenCoachList) await getCoachOverview(dbTen, coach.id, coach.level, YEAR_MONTH);
+    for (const coach of tenCoachList) await getCoachOverview(dbTen, coach, YEAR_MONTH);
 
     expect(perTen.length).toBeGreaterThan(perTwo.length);
   });
@@ -207,7 +208,7 @@ describe('一括取得と単体取得の同一性', () => {
     const batch = await getCoachOverviews(db, COACHES, YEAR_MONTH);
 
     for (const coach of COACHES) {
-      const single = await getCoachOverview(db, coach.id, coach.level, YEAR_MONTH);
+      const single = await getCoachOverview(db, coach, YEAR_MONTH);
       expect(batch.get(coach.id)).toEqual(single);
     }
   });
@@ -217,7 +218,7 @@ describe('一括取得と単体取得の同一性', () => {
     const batch = await getCoachOverviews(db, COACHES, YEAR_MONTH);
 
     for (const coach of COACHES) {
-      const single = await getCoachOverview(db, coach.id, coach.level, YEAR_MONTH);
+      const single = await getCoachOverview(db, coach, YEAR_MONTH);
       const both = batch.get(coach.id)!;
 
       expect(both.evaluation.professional.score).toBe(single.evaluation.professional.score);

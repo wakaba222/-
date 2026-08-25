@@ -13,7 +13,7 @@
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { addMonthsToYearMonth, todayInJst, yearMonthOf } from '@/domain/date';
-import { getCoachOverview } from '@/server/services/evaluationService';
+import { coachRefOf, getCoachOverview } from '@/server/services/evaluationService';
 import { closeMonth } from '@/server/services/monthlyCloseService';
 import { loadAdminCoaches } from '@/server/services/adminOverviewService';
 import { formatRate, formatScore, formatYen } from '@/lib/format';
@@ -167,7 +167,7 @@ async function main(): Promise<void> {
   console.log('\n[4] Professional Score の算出');
   const coaches = await loadAdminCoaches(service);
   for (const coach of coaches) {
-    const overview = await getCoachOverview(service, coach.id, coach.professional_level, thisMonth);
+    const overview = await getCoachOverview(service, coachRefOf(coach), thisMonth);
     const { customerSuccess, sales, professional } = overview.evaluation;
     console.log(
       `  ${coach.users?.name}: Score ${formatScore(professional.score)} (${professional.band})` +

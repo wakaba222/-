@@ -73,6 +73,29 @@ export function currentYearMonth(): YearMonth {
 }
 
 /**
+ * 評価対象のコーチ。
+ *
+ * lessonUnitPrice はコーチ個別のレッスン単価。
+ * 同じランクでも人によって単価が違う運用に対応するため、報酬の参考表示で使う。
+ * 0 / null のときはランク別の既定単価にフォールバックする。
+ * Professional Score・昇格判定には一切影響しない。
+ */
+export interface CoachRef {
+  id: string;
+  level: ProfessionalLevel;
+  lessonUnitPrice?: number | null;
+}
+
+/** DB のコーチ行から CoachRef を作る (列名の対応をここ1箇所に閉じる) */
+export function coachRefOf(row: {
+  id: string;
+  professional_level: ProfessionalLevel;
+  lesson_unit_price?: number | null;
+}): CoachRef {
+  return { id: row.id, level: row.professional_level, lessonUnitPrice: row.lesson_unit_price };
+}
+
+/**
  * 1コーチ分の評価に必要な入力データ。
  * 単体取得(getCoachOverview)と一括取得(getCoachOverviews)で同じ形にそろえ、
  * 組み立て処理を共通化する。これにより一覧と個票で数字がずれない。
@@ -102,11 +125,11 @@ function toRequirementCounts(rows: RequirementCheckRow[]): Record<string, number
  * 単体取得でも一括取得でもここを通るため、計算経路は 1 本に保たれる。
  */
 export function assembleCoachOverview(
-  coachId: string,
-  level: ProfessionalLevel,
+  coach: CoachRef,
   yearMonth: YearMonth,
   sources: CoachOverviewSources,
 ): CoachOverview {
+  const { id: coachId, level } = coach;
   const { rules, customers, sales, trendSnapshots, behaviorStatus, requirementCounts, lessonCount } = sources;
 
   const evaluation = evaluateCoachMonth({ coachId, level, yearMonth, customers, sales }, rules);
@@ -131,6 +154,7 @@ export function assembleCoachOverview(
     monthly.incentiveTotal,
     bonus.amount,
     rules,
+    coach.lessonUnitPrice,
   );
 
   return {
@@ -170,10 +194,10 @@ export function assembleCoachOverview(
  */
 export async function getCoachOverview(
   db: Db,
-  coachId: string,
-  level: ProfessionalLevel,
+  coach: CoachRef,
   yearMonth: YearMonth = currentYearMonth(),
 ): Promise<CoachOverview> {
+  const coachId = coach.id;
   // ルール取得も含めて並列化する (直列に待つと往復回数ぶん遅くなる)
   const [rules, customers, sales, trendSnapshots, behaviorRow, checkRows, lessonRow] = await Promise.all([
     loadEvaluationRules(db, { yearMonth }),
@@ -201,7 +225,7 @@ export async function getCoachOverview(
       .maybeSingle<LessonCountRow>(),
   ]);
 
-  return assembleCoachOverview(coachId, level, yearMonth, {
+  return assembleCoachOverview(coach, yearMonth, {
     rules,
     customers,
     sales,
@@ -222,7 +246,7 @@ export async function getCoachOverview(
  */
 export async function getCoachOverviews(
   db: Db,
-  coaches: { id: string; level: ProfessionalLevel }[],
+  coaches: CoachRef[],
   yearMonth: YearMonth = currentYearMonth(),
 ): Promise<Map<string, CoachOverview>> {
   const result = new Map<string, CoachOverview>();
@@ -276,7 +300,7 @@ export async function getCoachOverviews(
   for (const coach of coaches) {
     result.set(
       coach.id,
-      assembleCoachOverview(coach.id, coach.level, yearMonth, {
+      assembleCoachOverview(coach, yearMonth, {
         rules,
         customers: customersByCoach.get(coach.id) ?? [],
         sales: salesByCoach.get(coach.id) ?? [],

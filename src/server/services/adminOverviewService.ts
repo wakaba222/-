@@ -1,7 +1,7 @@
 import type { BehaviorStatus, ProfessionalLevel, PromotionStatus, YearMonth } from '@/domain/types';
 import type { CoachWithUserRow } from '@/lib/supabase/types';
 import type { Db } from '@/server/repositories/evaluationRepository';
-import { currentYearMonth, getCoachOverviews } from './evaluationService';
+import { coachRefOf, currentYearMonth, getCoachOverviews } from './evaluationService';
 
 export interface AdminCoachRow {
   coachId: string;
@@ -48,7 +48,7 @@ export async function buildAdminCoachRows(
   // 組み立てはコーチ画面と同じ処理を通るので、一覧と個票で数字が食い違わない。
   const overviews = await getCoachOverviews(
     db,
-    coaches.map((coach) => ({ id: coach.id, level: coach.professional_level })),
+    coaches.map(coachRefOf),
     yearMonth,
   );
 

@@ -6,13 +6,13 @@ import { ScoreTrend } from '@/components/ScoreTrend';
 import { maxProfessionalScore } from '@/domain/evaluation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { requireCoach } from '@/server/auth';
-import { getCoachOverview } from '@/server/services/evaluationService';
+import { coachRefOf, getCoachOverview } from '@/server/services/evaluationService';
 import { formatScore, formatYen } from '@/lib/format';
 
 export default async function CoachPromotionPage() {
   const session = await requireCoach();
   const supabase = await createSupabaseServerClient();
-  const overview = await getCoachOverview(supabase, session.coach.id, session.coach.professional_level);
+  const overview = await getCoachOverview(supabase, coachRefOf(session.coach));
   const { promotion, bonus } = overview;
 
   return (

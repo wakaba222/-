@@ -27,6 +27,8 @@ interface CoachRecord {
   userId: string;
   name: string;
   level: ProfessionalLevel;
+  /** 報酬の参考表示に使うコーチ個別のレッスン単価 (評価・昇格には影響しない) */
+  lessonUnitPrice: number | null;
 }
 
 async function loadActiveCoaches(db: Db): Promise<CoachRecord[]> {
@@ -45,6 +47,7 @@ async function loadActiveCoaches(db: Db): Promise<CoachRecord[]> {
       userId: row.user_id,
       name: row.users?.name ?? '(名称未設定)',
       level: row.professional_level,
+      lessonUnitPrice: row.lesson_unit_price,
     }));
 }
 
@@ -60,7 +63,7 @@ export async function closeMonth(db: Db, yearMonth: YearMonth): Promise<CoachClo
   const results: CoachCloseResult[] = [];
 
   for (const coach of coaches) {
-    const overview = await getCoachOverview(db, coach.id, coach.level, yearMonth);
+    const overview = await getCoachOverview(db, coach, yearMonth);
     const { customerSuccess, sales, professional } = overview.evaluation;
 
     const { data: existing, error: existingError } = await db

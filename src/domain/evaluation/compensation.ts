@@ -13,6 +13,22 @@ export interface CompensationEstimate {
 }
 
 /**
+ * 実際に使うレッスン単価を決める。
+ *
+ * 同じランクでも人によって単価が違う運用があるため、
+ * コーチ個別の単価 (coaches.lesson_unit_price) を優先する。
+ * 未設定 (0 以下 / null) のときだけ、ランク別の既定単価にフォールバックする。
+ */
+export function resolveLessonUnitPrice(
+  coachUnitPrice: number | null | undefined,
+  level: ProfessionalLevel,
+  rules: EvaluationRules,
+): number {
+  if (typeof coachUnitPrice === 'number' && coachUnitPrice > 0) return coachUnitPrice;
+  return rules.lessonUnitPrice[level];
+}
+
+/**
  * 月間想定報酬 (仕様39章)。
  * あくまで参考値であり、実際の給与支払システムとは分離する。
  */
@@ -22,8 +38,9 @@ export function estimateMonthlyCompensation(
   incentiveTotal: number,
   bonusAmount: number,
   rules: EvaluationRules,
+  coachUnitPrice?: number | null,
 ): CompensationEstimate {
-  const unitPrice = rules.lessonUnitPrice[level];
+  const unitPrice = resolveLessonUnitPrice(coachUnitPrice, level, rules);
   const lessonReward = lessonCount === null ? null : lessonCount * unitPrice;
 
   return {
