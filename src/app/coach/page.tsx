@@ -4,27 +4,48 @@ import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { ConditionList } from '@/components/ConditionList';
 import { MilestoneList } from '@/components/MilestoneList';
+import { MonthlyActivity, type MonthlyActivitySummary } from '@/components/MonthlyActivity';
 import { ScoreDisplay, SubScoreBar } from '@/components/ScoreDisplay';
-import { maxProfessionalScore } from '@/domain/evaluation';
 import { NotificationList } from '@/components/NotificationList';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { requireCoach } from '@/server/auth';
 import { coachRefOf, getCoachOverview } from '@/server/services/evaluationService';
 import { formatManYen, formatRate, formatScore, formatYearMonth, formatYen } from '@/lib/format';
-import type { NotificationRow } from '@/lib/supabase/types';
+import { maxProfessionalScore, monthPeriod } from '@/domain/evaluation';
+import type { NotificationRow, PerformanceRecordRow } from '@/lib/supabase/types';
 
 export default async function CoachDashboardPage() {
   const session = await requireCoach();
   const supabase = await createSupabaseServerClient();
   const overview = await getCoachOverview(supabase, coachRefOf(session.coach));
 
-  const { data: notifications } = await supabase
-    .from('notifications')
-    .select('id, user_id, type, title, body, link_url, read_at, created_at')
-    .eq('user_id', session.user.id)
-    .order('created_at', { ascending: false })
-    .limit(5)
-    .returns<NotificationRow[]>();
+  // 今月の登録実績。「登録しても何も返ってこない」を避けるための手応え表示に使う
+  const thisMonth = monthPeriod(overview.yearMonth);
+  const [{ data: notifications }, { data: monthlyRecords }] = await Promise.all([
+    supabase
+      .from('notifications')
+      .select('id, user_id, type, title, body, link_url, read_at, created_at')
+      .eq('user_id', session.user.id)
+      .order('created_at', { ascending: false })
+      .limit(5)
+      .returns<NotificationRow[]>(),
+    supabase
+      .from('performance_records')
+      .select('id, is_complete_success')
+      .eq('coach_id', session.coach.id)
+      .gte('recorded_on', thisMonth.from)
+      .lte('recorded_on', thisMonth.to)
+      .is('deleted_at', null)
+      .returns<Pick<PerformanceRecordRow, 'id' | 'is_complete_success'>[]>(),
+  ]);
+
+  const monthlySales = overview.sales.filter((sale) => sale.soldOn >= thisMonth.from && sale.soldOn <= thisMonth.to);
+  const activity: MonthlyActivitySummary = {
+    recordCount: (monthlyRecords ?? []).length,
+    achievedCount: (monthlyRecords ?? []).filter((r) => r.is_complete_success).length,
+    saleCount: monthlySales.length,
+    salesAmount: overview.salesBreakdown.monthly,
+  };
 
   const { customerSuccess, sales, professional } = overview.evaluation;
   const { longTerm, shortTerm } = customerSuccess;
@@ -54,10 +75,13 @@ export default async function CoachDashboardPage() {
         </div>
       </section>
 
+      {/* 登録した手応えを先に見せる。ここが薄いと報告が続かない */}
+      <MonthlyActivity summary={activity} />
+
       {/* 次の一歩: 「あと何をすると何が良くなるか」を、点数の内訳より先に見せる */}
       <Card>
         <CardHeader title="次の一歩" description="あと何をすると、何が良くなるか" />
-        <CardBody className="py-1">
+        <CardBody className="py-3">
           <MilestoneList milestones={overview.milestones} />
         </CardBody>
       </Card>

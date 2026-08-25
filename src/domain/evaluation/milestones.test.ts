@@ -70,9 +70,13 @@ describe('顧客成果の次の一歩', () => {
   it('あと何名の完全達成で何点増えるかを出す', () => {
     // 対象10名・達成8名 (80%) → 90%(9名) で 30点
     const milestone = nextLongTermMilestone(8, 10, RULES);
-    expect(milestone?.action).toBe('あと 1名の完全達成');
+    expect(milestone?.action).toBe('あと 1名');
+    expect(milestone?.gap).toBe('1名');
     expect(milestone?.note).toContain('80%');
     expect(milestone?.note).toContain('90%');
+    // 8名達成済み / 9名で目標 → 進捗はほぼ達成間近
+    expect(milestone?.progress).toBeCloseTo(8 / 9);
+    expect(milestone?.progressLabel).toEqual({ current: '8名', target: '9名' });
 
     const gain =
       interpolateScore(0.9, RULES.customerSuccess.longTerm.anchors, RULES.customerSuccess.longTerm.max) -
@@ -96,7 +100,8 @@ describe('四半期ボーナスの次の一歩', () => {
     // 平均85点 → 30,000円。次は90点で50,000円
     const milestone = nextBonusMilestone(bonusOf(85, 30_000), RULES);
     expect(milestone?.action).toBe('3ヶ月平均を あと 5点');
-    expect(milestone?.reward).toBe('ボーナス +20,000円');
+    expect(milestone?.reward).toBe('+20,000円');
+    expect(milestone?.progress).toBeCloseTo(85 / 90);
   });
 
   it('最高ラインに届いていれば出さない', () => {
@@ -105,8 +110,9 @@ describe('四半期ボーナスの次の一歩', () => {
 
   it('確定した評価がまだ無いときは、待てばよいことを示す', () => {
     const milestone = nextBonusMilestone(bonusOf(null, 0), RULES);
-    expect(milestone?.action).toContain('待つ');
+    expect(milestone?.action).toContain('月次評価');
     expect(milestone?.reward).toContain('円');
+    expect(milestone?.progress).toBe(0);
   });
 });
 
@@ -124,7 +130,9 @@ describe('昇格の次の一歩', () => {
     // 条件の全文は下の一覧に出るため、ここでは一番近い1件だけを短く出す
     expect(milestone?.action).toBe('3ヶ月平均 Score を 90以上');
     expect(milestone?.note).toContain('85.0');
-    expect(milestone?.note).toContain('残り1条件');
+    // 残件数は大きく見せる gap 側に出す
+    expect(milestone?.gap).toBe('1条件');
+    expect(milestone?.achieved).toBe(false);
     // P1(標準0円) → P2(標準10,000円) の差が「いいこと」として出る
     expect(milestone?.reward).toContain('P2');
     expect(milestone?.reward).toContain('10,000円');
@@ -140,12 +148,15 @@ describe('昇格の次の一歩', () => {
 
   it('個別単価が次ランクの標準より低ければ、その差額を示す', () => {
     const milestone = promotionMilestone('P1', promotionOf({ status: 'CANDIDATE' }), RULES, 8_000);
-    expect(milestone?.reward).toContain('+2,000円');
+    expect(milestone?.reward).toBe('P2 昇格・単価 +2,000円');
   });
 
   it('条件を満たしていればその旨を出す', () => {
     const milestone = promotionMilestone('P1', promotionOf({ status: 'CANDIDATE' }), RULES);
     expect(milestone?.action).toBe('条件を全て満たしています');
+    // 達成済みの行は「あと○○」ではなく達成として見せる
+    expect(milestone?.achieved).toBe(true);
+    expect(milestone?.progress).toBe(1);
   });
 
   it('最上位ランクなら出さない', () => {
@@ -171,6 +182,9 @@ describe('一覧の組み立て', () => {
     for (const m of milestones) {
       expect(m.action.length).toBeGreaterThan(0);
       expect(m.reward.length).toBeGreaterThan(0);
+      // 進捗バーは必ず 0〜1 に収まる (バーがはみ出さない)
+      expect(m.progress).toBeGreaterThanOrEqual(0);
+      expect(m.progress).toBeLessThanOrEqual(1);
     }
   });
 

@@ -1,5 +1,4 @@
 import { formatScore } from '@/lib/format';
-import { cn } from '@/lib/cn';
 
 export function ScoreDisplay({
   score,
@@ -15,10 +14,24 @@ export function ScoreDisplay({
 }) {
   const ratio = score === null || max <= 0 ? 0 : Math.min(score / max, 1);
 
+  // まだ算出できない状態で「N/A」を大きく出すと、始めたばかりのコーチには
+  // 「評価が低い」と誤解されるため、これから始まることが伝わる見せ方にする。
+  if (score === null) {
+    return (
+      <div>
+        <p className="text-2xl font-bold leading-tight text-white">これから始まります</p>
+        <p className="mt-2 text-sm text-eagle-100">
+          {reason ?? '評価対象のお客様が増えると、ここにスコアが出ます'}
+        </p>
+        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/15" />
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="flex items-end gap-3">
-        <span className={cn('tabular text-6xl font-bold leading-none tracking-tight', score === null ? 'text-ink-300' : 'text-white')}>
+        <span className="tabular text-6xl font-bold leading-none tracking-tight text-white">
           {formatScore(score)}
         </span>
         <span className="pb-1.5 text-sm text-eagle-100">/ {max}</span>

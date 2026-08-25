@@ -19,10 +19,24 @@ export interface Milestone {
   category: string;
   /** あと何をすればよいか (例: 「あと 155万円」) */
   action: string;
+  /** 「あと」の数量だけを取り出したもの (例: 「155万円」)。大きく見せる用 */
+  gap: string;
   /** それで何が起きるか (例: 「売上点 +9.0点」) */
   reward: string;
+  /** 目標までの進み具合 (0〜1)。バー表示に使う */
+  progress: number;
+  /** 進捗バーの脇に出す現在地と目標 (例: 「45万円」「200万円」) */
+  progressLabel: { current: string; target: string };
+  /** 既に条件を満たしているか (「あと○○」ではなく達成表示にする) */
+  achieved: boolean;
   /** 補足 (任意) */
   note?: string;
+}
+
+/** 0〜1 に収める。分母0でも壊れないようにする */
+function ratio(current: number, target: number): number {
+  if (!Number.isFinite(target) || target <= 0) return 0;
+  return Math.min(Math.max(current / target, 0), 1);
 }
 
 /** 次に超えるアンカーを探す。既に最大アンカーに届いていれば null */
@@ -60,10 +74,14 @@ export function nextSalesMilestone(scoringAmount: number, rules: EvaluationRules
 
   return {
     code: 'SALES',
-    category: '売上',
+    category: useRolling ? '直近3ヶ月の売上' : '今月の売上',
     action: `あと ${formatManYen(target[0] - scoringAmount)}`,
+    gap: formatManYen(target[0] - scoringAmount),
     reward: `売上点 +${formatPoint(gain)}`,
-    note: `${useRolling ? '直近3ヶ月' : '今月'}の税抜売上が ${formatManYen(target[0])} に届くと ${formatPoint(nextScore)} になります`,
+    achieved: false,
+    progress: ratio(scoringAmount, target[0]),
+    progressLabel: { current: formatManYen(scoringAmount), target: formatManYen(target[0]) },
+    note: `${formatManYen(target[0])} に届くと 売上点が ${formatPoint(nextScore)} になります`,
   };
 }
 
@@ -95,12 +113,17 @@ function rateMilestone(
     const gain = interpolateScore(reachedRate, anchors, max) - currentScore;
     if (gain <= 0) continue;
 
+    const goalCount = achievedCount + needed;
     return {
       code,
       category,
-      action: `あと ${needed}名の完全達成`,
+      action: `あと ${needed}名`,
+      gap: `${needed}名`,
       reward: `${category}点 +${formatPoint(gain)}`,
-      note: `達成率が ${formatPercent(currentRate)} → ${formatPercent(reachedRate)} になります`,
+      achieved: false,
+      progress: ratio(achievedCount, goalCount),
+      progressLabel: { current: `${achievedCount}名`, target: `${goalCount}名` },
+      note: `達成率 ${formatPercent(currentRate)} → ${formatPercent(reachedRate)} になります`,
     };
   }
   return null;
@@ -151,8 +174,12 @@ export function nextBonusMilestone(bonus: BonusResult, rules: EvaluationRules): 
     return {
       code: 'BONUS',
       category: '四半期ボーナス',
-      action: '確定した月次評価がたまるのを待つ',
-      reward: `3ヶ月平均 ${first.min}点で ${first.amount.toLocaleString('ja-JP')}円`,
+      action: 'まず月次評価を積み上げる',
+      gap: `平均 ${first.min}点`,
+      reward: `${first.amount.toLocaleString('ja-JP')}円`,
+      achieved: false,
+      progress: 0,
+      progressLabel: { current: '—', target: `${first.min}点` },
       note: '月次締めが済んだ月の平均で判定します',
     };
   }
@@ -166,8 +193,12 @@ export function nextBonusMilestone(bonus: BonusResult, rules: EvaluationRules): 
     code: 'BONUS',
     category: '四半期ボーナス',
     action: `3ヶ月平均を あと ${formatPoint(next.min - bonus.average)}`,
-    reward: `ボーナス +${gain.toLocaleString('ja-JP')}円`,
-    note: `平均 ${round1(bonus.average)}点 → ${next.min}点 で ${next.amount.toLocaleString('ja-JP')}円 になります`,
+    gap: formatPoint(next.min - bonus.average),
+    reward: `+${gain.toLocaleString('ja-JP')}円`,
+    achieved: false,
+    progress: ratio(bonus.average, next.min),
+    progressLabel: { current: `${round1(bonus.average)}点`, target: `${next.min}点` },
+    note: `3ヶ月平均が ${next.min}点 に届くと ${next.amount.toLocaleString('ja-JP')}円 になります`,
   };
 }
 
@@ -193,19 +224,24 @@ export function promotionMilestone(
   const rise = nextStandard - currentPrice;
 
   const reward =
-    rise > 0
-      ? `${toLevel} へ昇格 / レッスン単価が +${rise.toLocaleString('ja-JP')}円`
-      : `${toLevel} へ昇格`;
+    rise > 0 ? `${toLevel} 昇格・単価 +${rise.toLocaleString('ja-JP')}円` : `${toLevel} へ昇格`;
 
   const rule = rules.promotion[promotionRuleKey(level, toLevel)];
   const note = rule?.requiresAdminApproval ? '昇格には最終承認が必要です' : undefined;
+
+  const total = promotion.conditions.length;
+  const met = total - promotion.shortfalls.length;
 
   if (promotion.shortfalls.length === 0) {
     return {
       code: 'PROMOTION',
       category: '昇格',
       action: '条件を全て満たしています',
+      gap: '条件クリア',
       reward,
+      achieved: true,
+      progress: 1,
+      progressLabel: { current: `${met}件`, target: `${total}件` },
       note: note ?? '次回の月次締めで昇格候補になります',
     };
   }
@@ -220,8 +256,12 @@ export function promotionMilestone(
     code: 'PROMOTION',
     category: '昇格',
     action,
+    gap: `${promotion.shortfalls.length}条件`,
     reward,
-    note: note ?? `現在 ${nearest!.currentLabel} / 残り${promotion.shortfalls.length}条件`,
+    achieved: false,
+    progress: ratio(met, total),
+    progressLabel: { current: `${met}件`, target: `${total}件` },
+    note: note ?? `${nearest!.label} は現在 ${nearest!.currentLabel}`,
   };
 }
 
