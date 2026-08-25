@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { COACH_EMAIL, login, readProfessionalScore, selectOptionContaining, SCREENSHOT_DIR } from './helpers';
+import {
+  COACH_EMAIL,
+  login,
+  readProfessionalScore,
+  selectOptionContaining,
+  skipIfNoCoachAccount,
+  SCREENSHOT_DIR,
+} from './helpers';
 
 /**
  * コーチの主要導線。
@@ -7,6 +14,8 @@ import { COACH_EMAIL, login, readProfessionalScore, selectOptionContaining, SCRE
  * 実環境でも成立するかを確認する。
  */
 test.describe('コーチ画面', () => {
+  test.beforeEach(() => skipIfNoCoachAccount());
+
   test('ダッシュボードに現在地と次の条件が表示される', async ({ page }, testInfo) => {
     await login(page, COACH_EMAIL);
 

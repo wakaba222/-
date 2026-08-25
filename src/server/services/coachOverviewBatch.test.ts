@@ -38,8 +38,9 @@ function matches(row: Row, filter: Filter): boolean {
   }
 }
 
-function createFakeDb(tables: Record<string, Row[]>): Db {
+function createFakeDb(tables: Record<string, Row[]>, tableHits?: string[]): Db {
   function builder(table: string) {
+    tableHits?.push(table);
     const filters: Filter[] = [];
     const orders: { column: string; ascending: boolean }[] = [];
     let limit: number | null = null;
@@ -172,6 +173,33 @@ const COACHES = [
   { id: 'coach-a', level: 'P1' as const },
   { id: 'coach-b', level: 'P2' as const },
 ];
+
+describe('一括取得の問い合わせ本数', () => {
+  it('コーチ人数が増えても問い合わせ本数が増えない (N+1 の再発防止)', async () => {
+    const twoCoaches: string[] = [];
+    await getCoachOverviews(createFakeDb(buildTables(), twoCoaches), COACHES, YEAR_MONTH);
+
+    // 同じデータのままコーチだけ10名に増やす
+    const tenCoachList = Array.from({ length: 10 }, (_, i) => ({ id: `coach-${i}`, level: 'P1' as const }));
+    const tenCoaches: string[] = [];
+    await getCoachOverviews(createFakeDb(buildTables(), tenCoaches), tenCoachList, YEAR_MONTH);
+
+    // 一括取得の本数はコーチ人数に比例しない (テーブルごとに1回のため)
+    expect(tenCoaches.length).toBeLessThanOrEqual(twoCoaches.length);
+    expect(twoCoaches.length).toBeLessThanOrEqual(9);
+
+    // 対比: 単体取得を人数ぶん回すと本数は人数に比例して増える
+    const perTwo: string[] = [];
+    const dbTwo = createFakeDb(buildTables(), perTwo);
+    for (const coach of COACHES) await getCoachOverview(dbTwo, coach.id, coach.level, YEAR_MONTH);
+
+    const perTen: string[] = [];
+    const dbTen = createFakeDb(buildTables(), perTen);
+    for (const coach of tenCoachList) await getCoachOverview(dbTen, coach.id, coach.level, YEAR_MONTH);
+
+    expect(perTen.length).toBeGreaterThan(perTwo.length);
+  });
+});
 
 describe('一括取得と単体取得の同一性', () => {
   it('コーチごとの評価結果が単体取得と完全に一致する', async () => {

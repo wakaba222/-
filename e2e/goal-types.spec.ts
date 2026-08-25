@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { COACH_EMAIL, login } from './helpers';
+import { COACH_EMAIL, login, skipIfNoCoachAccount } from './helpers';
 
 /**
  * 目標種別ごとの成果登録 (仕様4章)。
@@ -24,6 +24,7 @@ const CASES: GoalCase[] = [
 
 test.describe('目標種別ごとの成果登録', () => {
   test.skip(({ isMobile }) => isMobile === true, 'デスクトップで代表実行する');
+  test.beforeEach(() => skipIfNoCoachAccount());
 
   for (const target of CASES) {
     test(`${target.kind} 目標の顧客で達成判定が動く`, async ({ page }) => {

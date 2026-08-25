@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ADMIN_EMAIL, COACH_EMAIL, login, logout, selectOptionContaining } from './helpers';
+import { ADMIN_EMAIL, COACH_EMAIL, login, logout, selectOptionContaining, skipIfNoCoachAccount } from './helpers';
 
 /**
  * ADMIN の修正系操作 (仕様18章・26章)。
@@ -11,6 +11,7 @@ test.describe('ADMINの修正操作', () => {
   test.skip(({ isMobile }) => isMobile === true, 'ADMIN画面はPC利用が前提');
 
   test('コーチが登録した売上をADMINが返金処理できる', async ({ page }) => {
+    skipIfNoCoachAccount();
     // 対象の売上をコーチ側で作る
     await login(page, COACH_EMAIL);
     await page.goto('/coach/sales/new');
@@ -37,6 +38,7 @@ test.describe('ADMINの修正操作', () => {
   });
 
   test('コーチが登録した成果をADMINが取消できる', async ({ page }) => {
+    skipIfNoCoachAccount();
     await login(page, COACH_EMAIL);
     await page.goto('/coach/records/new');
     const select = page.getByLabel('顧客');
