@@ -3,6 +3,7 @@ import { PROFESSIONAL_LEVEL_LABELS } from '@/domain/types';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { ConditionList } from '@/components/ConditionList';
+import { MilestoneList } from '@/components/MilestoneList';
 import { ScoreDisplay, SubScoreBar } from '@/components/ScoreDisplay';
 import { maxProfessionalScore } from '@/domain/evaluation';
 import { NotificationList } from '@/components/NotificationList';
@@ -52,6 +53,14 @@ export default async function CoachDashboardPage() {
           />
         </div>
       </section>
+
+      {/* 次の一歩: 「あと何をすると何が良くなるか」を、点数の内訳より先に見せる */}
+      <Card>
+        <CardHeader title="次の一歩" description="あと何をすると、何が良くなるか" />
+        <CardBody className="py-1">
+          <MilestoneList milestones={overview.milestones} />
+        </CardBody>
+      </Card>
 
       <Card>
         <CardHeader title="内訳" description="顧客成果と売上の2軸で構成されます" />

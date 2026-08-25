@@ -34,3 +34,4 @@ export function evaluateCoachMonth(input: CoachEvaluationInput, rules: Evaluatio
 }
 export * from './attribution';
 export * from './compensation';
+export * from './milestones';

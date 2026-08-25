@@ -1,5 +1,6 @@
 import {
   aggregateSales,
+  buildMilestones,
   calcQuarterlyBonus,
   countNeededForRate,
   estimateMonthlyCompensation,
@@ -11,6 +12,7 @@ import {
   yearToDatePeriod,
   type CompensationEstimate,
   type EvaluationRules,
+  type Milestone,
 } from '@/domain/evaluation';
 import { yearMonthOf, todayInJst } from '@/domain/date';
 import type {
@@ -61,6 +63,8 @@ export interface CoachOverview {
   bonus: BonusResult;
   compensation: CompensationEstimate;
   behaviorStatus: BehaviorStatus;
+  /** 「あと何をすると何が良くなるか」の一覧 (表示専用) */
+  milestones: Milestone[];
   /** 完全成果率90%まであと何名か */
   customersNeededForTarget: number;
   targetRate: number;
@@ -157,6 +161,28 @@ export function assembleCoachOverview(
     coach.lessonUnitPrice,
   );
 
+  // 売上点の判定に使っている期間の金額 (ルールの scoreBasis に従う)
+  const salesScoringAmount = rules.sales.scoreBasis === 'ROLLING_3M' ? quarterly.amount : monthly.amount;
+
+  const milestones = buildMilestones(
+    {
+      level,
+      lessonUnitPrice: coach.lessonUnitPrice,
+      salesScoringAmount,
+      longTerm: {
+        achievedCount: evaluation.customerSuccess.longTerm.achievedCount,
+        targetCount: evaluation.customerSuccess.longTerm.targetCount,
+      },
+      shortTerm: {
+        achievedCount: evaluation.customerSuccess.shortTerm.achievedCount,
+        targetCount: evaluation.customerSuccess.shortTerm.targetCount,
+      },
+      bonus,
+      promotion,
+    },
+    rules,
+  );
+
   return {
     coachId,
     yearMonth,
@@ -175,6 +201,7 @@ export function assembleCoachOverview(
     bonus,
     compensation,
     behaviorStatus,
+    milestones,
     customersNeededForTarget: countNeededForRate(
       targetRate,
       evaluation.customerSuccess.longTerm.achievedCount,
