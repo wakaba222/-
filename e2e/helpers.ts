@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 
 /** 実行のたびに消えないよう、スクリーンショットは固定ディレクトリへ出す */
 export const SCREENSHOT_DIR = 'e2e-screenshots';
@@ -22,6 +22,42 @@ export function skipIfNoCoachAccount(): void {
     COACH_EMAIL === '',
     'コーチのログイン情報 (E2E_COACH_EMAIL) が未指定のためスキップ',
   );
+}
+
+/**
+ * コーチのセッションCookie。
+ * 実在コーチのパスワードを持たない環境 (本番など) でも
+ * コーチ視点の確認ができるよう、発行済みのセッションを差し込めるようにしている。
+ * `npm run verify:authz -- --print-coach-cookie` で取得できる。
+ */
+export const COACH_COOKIE = process.env.E2E_COACH_COOKIE ?? '';
+
+export function skipIfNoCoachSession(): void {
+  test.skip(
+    COACH_COOKIE === '' && COACH_EMAIL === '',
+    'コーチのセッション (E2E_COACH_COOKIE) もログイン情報 (E2E_COACH_EMAIL) も未指定のためスキップ',
+  );
+}
+
+/**
+ * コーチとしてブラウザを開く。
+ * Cookie が渡されていればそれを使い、無ければ通常どおりログインする。
+ */
+export async function openAsCoach(context: BrowserContext, page: Page, baseURL: string): Promise<void> {
+  if (COACH_COOKIE === '') {
+    await login(page, COACH_EMAIL);
+    return;
+  }
+
+  const { hostname } = new URL(baseURL);
+  await context.addCookies(
+    COACH_COOKIE.split('; ').map((pair) => {
+      const index = pair.indexOf('=');
+      return { name: pair.slice(0, index), value: pair.slice(index + 1), domain: hostname, path: '/' };
+    }),
+  );
+  await page.goto('/coach');
+  await expect(page).toHaveURL(/\/coach/);
 }
 
 export function demoPassword(): string {

@@ -17,6 +17,7 @@
     "verify:seed": "npm run scripts:build && node .verify/verify-seed.js",
     "scripts:build": "vite build --config scripts/build.config.ts",
     "seed:users": "npm run scripts:build && NODE_USE_ENV_PROXY=1 node --env-file=.env.local .verify/seed-users.js",
+    "verify:authz": "npm run scripts:build && NODE_USE_ENV_PROXY=1 node --env-file=.env.local .verify/verify-authz.js",
     "verify:remote": "npm run scripts:build && NODE_USE_ENV_PROXY=1 node --env-file=.env.local .verify/verify-remote.js",
     "db:push": "npm run scripts:build && NODE_USE_ENV_PROXY=1 node --env-file=.env.local .verify/apply-sql.js",
     "e2e": "playwright test",

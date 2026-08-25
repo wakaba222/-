@@ -6,7 +6,7 @@ import { addMonthsToYearMonth, isDateOnly, todayInJst, yearMonthOf } from '@/dom
 import { evaluationRulesSchema } from '@/domain/evaluation';
 import { loadEvaluationRules } from '@/server/repositories/evaluationRepository';
 import { createSupabaseServerClient, createSupabaseServiceClient } from '@/lib/supabase/server';
-import { requireAdmin } from '@/server/auth';
+import { requireAdminForAction } from '@/server/authz';
 import { fail, ok, type ActionResult } from '@/server/actionResult';
 import { closeMonth } from '@/server/services/monthlyCloseService';
 import { cancelSale } from '@/server/services/salesService';
@@ -53,7 +53,9 @@ function addMonthsToDate(date: string, months: number): string {
 }
 
 export async function createCustomerAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
-  const session = await requireAdmin();
+  const guard = await requireAdminForAction();
+  if (!guard.ok) return guard.result;
+  const session = guard.session;
   const parsed = customerSchema.safeParse({
     name: formData.get('name'),
     coachId: formData.get('coachId'),
@@ -124,7 +126,9 @@ const goalDecisionSchema = z.object({
 });
 
 export async function decideGoalAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
-  const session = await requireAdmin();
+  const guard = await requireAdminForAction();
+  if (!guard.ok) return guard.result;
+  const session = guard.session;
   const parsed = goalDecisionSchema.safeParse({
     customerId: formData.get('customerId'),
     decision: formData.get('decision'),
@@ -166,7 +170,8 @@ export async function updateCustomerStatusAction(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const guard = await requireAdminForAction();
+  if (!guard.ok) return guard.result;
   const parsed = customerStatusSchema.safeParse({
     customerId: formData.get('customerId'),
     status: formData.get('status'),
@@ -201,7 +206,9 @@ const reassignSchema = z.object({
 });
 
 export async function reassignCoachAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
-  const session = await requireAdmin();
+  const guard = await requireAdminForAction();
+  if (!guard.ok) return guard.result;
+  const session = guard.session;
   const parsed = reassignSchema.safeParse({
     customerId: formData.get('customerId'),
     coachId: formData.get('coachId'),
@@ -247,7 +254,9 @@ const behaviorSchema = z.object({
 });
 
 export async function setBehaviorStatusAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
-  const session = await requireAdmin();
+  const guard = await requireAdminForAction();
+  if (!guard.ok) return guard.result;
+  const session = guard.session;
   const parsed = behaviorSchema.safeParse({
     coachId: formData.get('coachId'),
     yearMonth: formData.get('yearMonth') ?? yearMonthOf(todayInJst()),
@@ -285,7 +294,9 @@ export async function setRequirementCheckAction(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  const session = await requireAdmin();
+  const guard = await requireAdminForAction();
+  if (!guard.ok) return guard.result;
+  const session = guard.session;
   const parsed = requirementSchema.safeParse({
     coachId: formData.get('coachId'),
     requirementCode: formData.get('requirementCode'),
@@ -321,7 +332,9 @@ const promotionDecisionSchema = z.object({
 });
 
 export async function decidePromotionAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
-  const session = await requireAdmin();
+  const guard = await requireAdminForAction();
+  if (!guard.ok) return guard.result;
+  const session = guard.session;
   const parsed = promotionDecisionSchema.safeParse({
     reviewId: formData.get('reviewId'),
     decision: formData.get('decision'),
@@ -379,7 +392,8 @@ const productSchema = z.object({
 });
 
 export async function upsertProductAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  const guard = await requireAdminForAction();
+  if (!guard.ok) return guard.result;
   const parsed = productSchema.safeParse({
     id: formData.get('id') ?? '',
     code: formData.get('code'),
@@ -424,7 +438,9 @@ export async function createRulesVersionAction(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  const session = await requireAdmin();
+  const guard = await requireAdminForAction();
+  if (!guard.ok) return guard.result;
+  const session = guard.session;
   const parsed = rulesSchema.safeParse({
     effectiveFrom: formData.get('effectiveFrom'),
     note: formData.get('note') ?? '',
@@ -471,7 +487,8 @@ export async function createRulesVersionAction(
 const closeSchema = z.object({ yearMonth: z.string().regex(/^\d{4}-\d{2}$/) });
 
 export async function closeMonthAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  const guard = await requireAdminForAction();
+  if (!guard.ok) return guard.result;
   const parsed = closeSchema.safeParse({ yearMonth: formData.get('yearMonth') });
   if (!parsed.success) return fail('対象月を指定してください');
 
@@ -504,7 +521,8 @@ const saleStatusSchema = z.object({
 });
 
 export async function updateSaleStatusAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  const guard = await requireAdminForAction();
+  if (!guard.ok) return guard.result;
   const parsed = saleStatusSchema.safeParse({
     saleId: formData.get('saleId'),
     mode: formData.get('mode'),
@@ -532,7 +550,8 @@ export async function deletePerformanceRecordAction(
   _prev: ActionResult | null,
   formData: FormData,
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const guard = await requireAdminForAction();
+  if (!guard.ok) return guard.result;
   const parsed = deleteRecordSchema.safeParse({
     recordId: formData.get('recordId'),
     customerId: formData.get('customerId'),
@@ -583,7 +602,8 @@ export async function createCoachAction(
   _prev: ActionResult<CreatedCoachCredentials> | null,
   formData: FormData,
 ): Promise<ActionResult<CreatedCoachCredentials>> {
-  await requireAdmin();
+  const guard = await requireAdminForAction();
+  if (!guard.ok) return guard.result;
   const parsed = coachSchema.safeParse({
     name: formData.get('name'),
     email: formData.get('email'),
@@ -645,7 +665,8 @@ const coachUpdateSchema = z.object({
 });
 
 export async function updateCoachAction(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
-  await requireAdmin();
+  const guard = await requireAdminForAction();
+  if (!guard.ok) return guard.result;
   const parsed = coachUpdateSchema.safeParse({
     coachId: formData.get('coachId'),
     level: formData.get('level'),

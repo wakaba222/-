@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { getSessionContext } from '@/server/auth';
+import { requireAdminForRoute } from '@/server/authz';
 import { buildAdminCoachRows, loadAdminCoaches } from '@/server/services/adminOverviewService';
 import { buildCustomerViews, CUSTOMER_VIEW_COLUMNS } from '@/server/services/customerViewService';
 import { loadEvaluationRules } from '@/server/repositories/evaluationRepository';
@@ -23,10 +23,9 @@ function toCsv(headers: string[], rows: (string | number | null)[][]): string {
 }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ type: string }> }) {
-  const session = await getSessionContext();
-  if (!session || session.user.role !== 'ADMIN') {
-    return NextResponse.json({ error: '権限がありません' }, { status: 403 });
-  }
+  // CSV は全コーチ・全顧客の数字を含むため ADMIN 限定
+  const guard = await requireAdminForRoute();
+  if (!guard.ok) return guard.response;
 
   const { type } = await params;
   const supabase = await createSupabaseServerClient();

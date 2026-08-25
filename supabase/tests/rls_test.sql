@@ -271,4 +271,206 @@ begin
   assert v_tax = 181818, format('申告された税額が保存されてしまった: %s (期待 181818)', v_tax);
 end $$;
 
+-- ============================================================================
+-- 設定変更は ADMIN 限定 (仕様: COACH は設定変更権限を一切持たない)
+--
+-- RLS のポリシーだけでなく、トリガによる明示的な拒否も効いていることを確認する。
+-- 「エラーは出ないが0件更新」で通過してしまわないよう、
+--   ① 例外が起きること
+--   ② 実際に値が変わっていないこと
+-- の両方を見る。
+-- ============================================================================
+reset role;
+reset request.jwt.claim.sub;
+
+-- 変更前の値を控える
+create table if not exists _settings_before as
+select
+  (select professional_level::text from public.coaches where id = '00000000-0000-0000-0000-0000000000f1') as coach_level,
+  (select lesson_unit_price from public.coaches where id = '00000000-0000-0000-0000-0000000000f1') as coach_price,
+  (select incentive_amount from public.products where id = '00000000-0000-0000-0000-0000000000b1') as product_incentive,
+  (select default_price from public.products where id = '00000000-0000-0000-0000-0000000000b1') as product_price,
+  (select role::text from public.users where id = '00000000-0000-0000-0000-0000000000c1') as coach_role,
+  (select count(*) from public.evaluation_rules) as rule_count,
+  (select count(*) from public.evaluation_snapshots) as snapshot_count,
+  (select count(*) from public.promotion_reviews) as review_count,
+  (select count(*) from public.coach_behavior_statuses) as behavior_count,
+  (select count(*) from public.promotion_requirement_checks) as requirement_count;
+
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000c1';
+
+do $$
+declare
+  v_allowed text[] := array[]::text[];
+  v_denied  text[] := array[]::text[];
+
+  -- 拒否のされ方は2通りある:
+  --   ・トリガが例外を投げる (insufficient_privilege)
+  --   ・RLS が対象行を隠し、0件更新で終わる (UPDATE の場合)
+  -- どちらも「変更できなかった」なので、両方を拒否として数える。
+  procedure_placeholder boolean;
+begin
+  -- 1. 自分のランクを上げる
+  begin
+    update public.coaches set professional_level = 'P4'
+     where id = '00000000-0000-0000-0000-0000000000f1';
+    if found then v_allowed := v_allowed || 'コーチのランク変更'::text;
+    else v_denied := v_denied || 'コーチのランク変更'::text; end if;
+  exception when insufficient_privilege then v_denied := v_denied || 'コーチのランク変更'::text;
+  end;
+
+  -- 2. 自分のレッスン単価を上げる
+  begin
+    update public.coaches set lesson_unit_price = 999999
+     where id = '00000000-0000-0000-0000-0000000000f1';
+    if found then v_allowed := v_allowed || 'レッスン単価の変更'::text;
+    else v_denied := v_denied || 'レッスン単価の変更'::text; end if;
+  exception when insufficient_privilege then v_denied := v_denied || 'レッスン単価の変更'::text;
+  end;
+
+  -- 3. インセンティブ額を上げる
+  begin
+    update public.products set incentive_amount = 999999
+     where id = '00000000-0000-0000-0000-0000000000b1';
+    if found then v_allowed := v_allowed || 'インセンティブ額の変更'::text;
+    else v_denied := v_denied || 'インセンティブ額の変更'::text; end if;
+  exception when insufficient_privilege then v_denied := v_denied || 'インセンティブ額の変更'::text;
+  end;
+
+  -- 4. 商品を新規登録する
+  begin
+    insert into public.products (code, name, default_price, incentive_amount)
+    values ('COACH_TAMPER', '[不正]', 1, 999999);
+    v_allowed := v_allowed || '商品の新規登録'::text;
+  exception when insufficient_privilege then v_denied := v_denied || '商品の新規登録'::text;
+  end;
+
+  -- 5. 評価ルールを追加する
+  begin
+    insert into public.evaluation_rules (version, effective_from, rules)
+    values (9999, '2030-01-01', '{"tampered":true}'::jsonb);
+    v_allowed := v_allowed || '評価ルールの追加'::text;
+  exception when insufficient_privilege then v_denied := v_denied || '評価ルールの追加'::text;
+  end;
+
+  -- 6. 評価ルールの中身を書き換える
+  begin
+    update public.evaluation_rules set note = '[不正] COACHによる変更';
+    if found then v_allowed := v_allowed || '評価ルールの書き換え'::text;
+    else v_denied := v_denied || '評価ルールの書き換え'::text; end if;
+  exception when insufficient_privilege then v_denied := v_denied || '評価ルールの書き換え'::text;
+  end;
+
+  -- 7. 評価スナップショットを作る
+  begin
+    insert into public.evaluation_snapshots
+      (coach_id, year_month, revision, current_rank, evaluation_rule_version, professional_score)
+    values ('00000000-0000-0000-0000-0000000000f1', '2030-01', 1, 'P2',
+            (select min(version) from public.evaluation_rules), 120);
+    v_allowed := v_allowed || '評価スナップショットの作成'::text;
+  exception when insufficient_privilege then v_denied := v_denied || '評価スナップショットの作成'::text;
+  end;
+
+  -- 8. 昇格審査を承認済みにする
+  begin
+    insert into public.promotion_reviews (coach_id, year_month, from_level, to_level, status)
+    values ('00000000-0000-0000-0000-0000000000f1', '2030-01', 'P2', 'P4', 'APPROVED');
+    v_allowed := v_allowed || '昇格審査の作成'::text;
+  exception when insufficient_privilege then v_denied := v_denied || '昇格審査の作成'::text;
+  end;
+
+  -- 9. 行動ルールを OK にする
+  begin
+    insert into public.coach_behavior_statuses (coach_id, year_month, status)
+    values ('00000000-0000-0000-0000-0000000000f1', '2030-01', 'OK');
+    v_allowed := v_allowed || '行動ルールの登録'::text;
+  exception when insufficient_privilege then v_denied := v_denied || '行動ルールの登録'::text;
+  end;
+
+  -- 10. 昇格要件を自分で承認する
+  begin
+    insert into public.promotion_requirement_checks
+      (coach_id, requirement_code, label, achieved_count, approved_at)
+    values ('00000000-0000-0000-0000-0000000000f1', 'TAMPER', '[不正]', 99, now());
+    v_allowed := v_allowed || '昇格要件の承認'::text;
+  exception when insufficient_privilege then v_denied := v_denied || '昇格要件の承認'::text;
+  end;
+
+  -- 11. 自分を ADMIN に昇格させる
+  begin
+    update public.users set role = 'ADMIN'
+     where id = '00000000-0000-0000-0000-0000000000c1';
+    if found then v_allowed := v_allowed || 'ロールの昇格'::text;
+    else v_denied := v_denied || 'ロールの昇格'::text; end if;
+  exception when insufficient_privilege then v_denied := v_denied || 'ロールの昇格'::text;
+  end;
+
+  assert array_length(v_allowed, 1) is null,
+    format('COACH が設定を変更できてしまった: %s', array_to_string(v_allowed, ' / '));
+  assert array_length(v_denied, 1) = 11,
+    format('拒否された件数が想定と違う: %s件 (%s)', coalesce(array_length(v_denied, 1), 0),
+           array_to_string(v_denied, ' / '));
+end $$;
+
+reset role;
+reset request.jwt.claim.sub;
+
+-- 値が1つも変わっていないこと
+do $$
+declare b record;
+begin
+  select * into b from _settings_before;
+  assert (select professional_level::text from public.coaches where id = '00000000-0000-0000-0000-0000000000f1') = b.coach_level,
+    'コーチのランクが書き換わっている';
+  assert (select lesson_unit_price from public.coaches where id = '00000000-0000-0000-0000-0000000000f1') = b.coach_price,
+    'レッスン単価が書き換わっている';
+  assert (select incentive_amount from public.products where id = '00000000-0000-0000-0000-0000000000b1') = b.product_incentive,
+    'インセンティブ額が書き換わっている';
+  assert (select default_price from public.products where id = '00000000-0000-0000-0000-0000000000b1') = b.product_price,
+    '商品価格が書き換わっている';
+  assert (select role::text from public.users where id = '00000000-0000-0000-0000-0000000000c1') = b.coach_role,
+    'ロールが書き換わっている';
+  assert (select count(*) from public.evaluation_rules) = b.rule_count, '評価ルールが増減している';
+  assert (select count(*) from public.evaluation_snapshots) = b.snapshot_count, 'スナップショットが増減している';
+  assert (select count(*) from public.promotion_reviews) = b.review_count, '昇格審査が増減している';
+  assert (select count(*) from public.coach_behavior_statuses) = b.behavior_count, '行動ルールが増減している';
+  assert (select count(*) from public.promotion_requirement_checks) = b.requirement_count, '昇格要件が増減している';
+end $$;
+
+-- ADMIN は同じ操作ができること (締めすぎて運用が止まっていないかの確認)
+set role authenticated;
+set request.jwt.claim.sub = '00000000-0000-0000-0000-0000000000a1';
+
+do $$
+begin
+  update public.products set incentive_amount = incentive_amount
+   where id = '00000000-0000-0000-0000-0000000000b1';
+  assert found, 'ADMIN が商品を更新できない';
+
+  insert into public.coach_behavior_statuses (coach_id, year_month, status)
+  values ('00000000-0000-0000-0000-0000000000f1', '2029-12', 'WARNING');
+
+  insert into public.evaluation_snapshots
+    (coach_id, year_month, revision, current_rank, evaluation_rule_version, professional_score)
+  values ('00000000-0000-0000-0000-0000000000f1', '2029-12', 1, 'P2',
+          (select min(version) from public.evaluation_rules), 100);
+end $$;
+
+reset role;
+reset request.jwt.claim.sub;
+
+-- サーバー側ジョブ (service_role) も書けること
+set role service_role;
+do $$
+begin
+  insert into public.evaluation_snapshots
+    (coach_id, year_month, revision, current_rank, evaluation_rule_version, professional_score)
+  values ('00000000-0000-0000-0000-0000000000f2', '2029-12', 1, 'P2',
+          (select min(version) from public.evaluation_rules), 90);
+end $$;
+reset role;
+
+drop table _settings_before;
+
 select 'INTEGRITY TEST PASSED' as result;
