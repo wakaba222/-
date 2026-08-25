@@ -121,8 +121,10 @@ describe('昇格の次の一歩', () => {
       }),
       RULES,
     );
-    expect(milestone?.action).toContain('残り1条件');
-    expect(milestone?.action).toContain('85.0 → 90以上');
+    // 条件の全文は下の一覧に出るため、ここでは一番近い1件だけを短く出す
+    expect(milestone?.action).toBe('3ヶ月平均 Score を 90以上');
+    expect(milestone?.note).toContain('85.0');
+    expect(milestone?.note).toContain('残り1条件');
     // P1(標準0円) → P2(標準10,000円) の差が「いいこと」として出る
     expect(milestone?.reward).toContain('P2');
     expect(milestone?.reward).toContain('10,000円');

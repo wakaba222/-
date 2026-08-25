@@ -210,16 +210,18 @@ export function promotionMilestone(
     };
   }
 
-  const remaining = promotion.shortfalls
-    .map((condition) => `${condition.label} (${condition.currentLabel} → ${condition.requiredLabel})`)
-    .join(' / ');
+  // 条件の全文は下の「昇格までの条件」に出るため、ここでは一番近い1件だけに絞る。
+  // スマホで3行に折り返すと「次の一歩」として読み流せなくなるため。
+  const [nearest, ...rest] = promotion.shortfalls;
+  const others = rest.length > 0 ? ` ほか${rest.length}件` : '';
+  const action = `${nearest!.label} を ${nearest!.requiredLabel}${others}`;
 
   return {
     code: 'PROMOTION',
     category: '昇格',
-    action: `残り${promotion.shortfalls.length}条件: ${remaining}`,
+    action,
     reward,
-    note,
+    note: note ?? `現在 ${nearest!.currentLabel} / 残り${promotion.shortfalls.length}条件`,
   };
 }
 
