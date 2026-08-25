@@ -43,8 +43,10 @@ export function MilestoneList({ milestones }: { milestones: Milestone[] }) {
                   {milestone.category}
                 </p>
                 <p className="mt-1.5 flex items-baseline gap-1.5">
-                  {milestone.achieved ? (
+                  {milestone.state === 'ACHIEVED' ? (
                     <span className="text-2xl font-bold leading-none text-eagle-800">🎉 {milestone.gap}</span>
+                  ) : milestone.state === 'WAITING' ? (
+                    <span className="text-base font-semibold leading-snug text-ink-700">{milestone.gap}</span>
                   ) : (
                     <>
                       <span className="text-sm text-ink-500">あと</span>

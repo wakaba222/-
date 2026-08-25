@@ -27,8 +27,13 @@ export interface Milestone {
   progress: number;
   /** 進捗バーの脇に出す現在地と目標 (例: 「45万円」「200万円」) */
   progressLabel: { current: string; target: string };
-  /** 既に条件を満たしているか (「あと○○」ではなく達成表示にする) */
-  achieved: boolean;
+  /**
+   * 行の見せ方。
+   *   GAP      … 「あと ○○」(通常)
+   *   ACHIEVED … 既に条件を満たしている
+   *   WAITING  … こちらの行動では動かせず、月次締めなどを待つ状態
+   */
+  state: 'GAP' | 'ACHIEVED' | 'WAITING';
   /** 補足 (任意) */
   note?: string;
 }
@@ -78,7 +83,7 @@ export function nextSalesMilestone(scoringAmount: number, rules: EvaluationRules
     action: `あと ${formatManYen(target[0] - scoringAmount)}`,
     gap: formatManYen(target[0] - scoringAmount),
     reward: `売上点 +${formatPoint(gain)}`,
-    achieved: false,
+    state: 'GAP',
     progress: ratio(scoringAmount, target[0]),
     progressLabel: { current: formatManYen(scoringAmount), target: formatManYen(target[0]) },
     note: `${formatManYen(target[0])} に届くと 売上点が ${formatPoint(nextScore)} になります`,
@@ -120,7 +125,7 @@ function rateMilestone(
       action: `あと ${needed}名`,
       gap: `${needed}名`,
       reward: `${category}点 +${formatPoint(gain)}`,
-      achieved: false,
+      state: 'GAP',
       progress: ratio(achievedCount, goalCount),
       progressLabel: { current: `${achievedCount}名`, target: `${goalCount}名` },
       note: `達成率 ${formatPercent(currentRate)} → ${formatPercent(reachedRate)} になります`,
@@ -175,9 +180,9 @@ export function nextBonusMilestone(bonus: BonusResult, rules: EvaluationRules): 
       code: 'BONUS',
       category: '四半期ボーナス',
       action: 'まず月次評価を積み上げる',
-      gap: `平均 ${first.min}点`,
-      reward: `${first.amount.toLocaleString('ja-JP')}円`,
-      achieved: false,
+      gap: '月次締め後に判定',
+      reward: `平均 ${first.min}点で ${first.amount.toLocaleString('ja-JP')}円`,
+      state: 'WAITING',
       progress: 0,
       progressLabel: { current: '—', target: `${first.min}点` },
       note: '月次締めが済んだ月の平均で判定します',
@@ -195,7 +200,7 @@ export function nextBonusMilestone(bonus: BonusResult, rules: EvaluationRules): 
     action: `3ヶ月平均を あと ${formatPoint(next.min - bonus.average)}`,
     gap: formatPoint(next.min - bonus.average),
     reward: `+${gain.toLocaleString('ja-JP')}円`,
-    achieved: false,
+    state: 'GAP',
     progress: ratio(bonus.average, next.min),
     progressLabel: { current: `${round1(bonus.average)}点`, target: `${next.min}点` },
     note: `3ヶ月平均が ${next.min}点 に届くと ${next.amount.toLocaleString('ja-JP')}円 になります`,
@@ -239,7 +244,7 @@ export function promotionMilestone(
       action: '条件を全て満たしています',
       gap: '条件クリア',
       reward,
-      achieved: true,
+      state: 'ACHIEVED',
       progress: 1,
       progressLabel: { current: `${met}件`, target: `${total}件` },
       note: note ?? '次回の月次締めで昇格候補になります',
@@ -258,7 +263,7 @@ export function promotionMilestone(
     action,
     gap: `${promotion.shortfalls.length}条件`,
     reward,
-    achieved: false,
+    state: 'GAP',
     progress: ratio(met, total),
     progressLabel: { current: `${met}件`, target: `${total}件` },
     note: note ?? `${nearest!.label} は現在 ${nearest!.currentLabel}`,

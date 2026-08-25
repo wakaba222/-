@@ -110,7 +110,9 @@ describe('四半期ボーナスの次の一歩', () => {
 
   it('確定した評価がまだ無いときは、待てばよいことを示す', () => {
     const milestone = nextBonusMilestone(bonusOf(null, 0), RULES);
-    expect(milestone?.action).toContain('月次評価');
+    // 自分の行動では動かせない状態なので「あと○○」とは出さない
+    expect(milestone?.state).toBe('WAITING');
+    expect(milestone?.gap).toBe('月次締め後に判定');
     expect(milestone?.reward).toContain('円');
     expect(milestone?.progress).toBe(0);
   });
@@ -132,7 +134,7 @@ describe('昇格の次の一歩', () => {
     expect(milestone?.note).toContain('85.0');
     // 残件数は大きく見せる gap 側に出す
     expect(milestone?.gap).toBe('1条件');
-    expect(milestone?.achieved).toBe(false);
+    expect(milestone?.state).toBe('GAP');
     // P1(標準0円) → P2(標準10,000円) の差が「いいこと」として出る
     expect(milestone?.reward).toContain('P2');
     expect(milestone?.reward).toContain('10,000円');
@@ -155,7 +157,7 @@ describe('昇格の次の一歩', () => {
     const milestone = promotionMilestone('P1', promotionOf({ status: 'CANDIDATE' }), RULES);
     expect(milestone?.action).toBe('条件を全て満たしています');
     // 達成済みの行は「あと○○」ではなく達成として見せる
-    expect(milestone?.achieved).toBe(true);
+    expect(milestone?.state).toBe('ACHIEVED');
     expect(milestone?.progress).toBe(1);
   });
 
