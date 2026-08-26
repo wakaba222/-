@@ -114,13 +114,13 @@ export default async function CoachDashboardPage() {
               <BreakdownRow
                 term="目標を達成したお客様"
                 hint="レッスン開始から4ヶ月たったお客様が対象"
-                value={longTerm.evaluable ? formatRate(longTerm.rate) : 'まだ対象のお客様がいません'}
+                value={longTerm.evaluable ? formatRate(longTerm.rate) : null}
                 detail={longTerm.evaluable ? `${longTerm.achievedCount}名 / ${longTerm.targetCount}名` : undefined}
               />
               <BreakdownRow
                 term="最近3ヶ月の達成"
                 hint="今も成果が出続けているか"
-                value={shortTerm.evaluable ? formatRate(shortTerm.rate) : 'まだ対象のお客様がいません'}
+                value={shortTerm.evaluable ? formatRate(shortTerm.rate) : null}
                 detail={shortTerm.evaluable ? `${shortTerm.achievedCount}名 / ${shortTerm.targetCount}名` : undefined}
               />
             </dl>
@@ -201,6 +201,7 @@ export default async function CoachDashboardPage() {
   );
 }
 
+/** value が null のときは「まだ対象がいない」状態。長文を右寄せにすると見出しが潰れるため下に置く */
 function BreakdownRow({
   term,
   hint,
@@ -209,9 +210,19 @@ function BreakdownRow({
 }: {
   term: string;
   hint: string;
-  value: string;
+  value: string | null;
   detail?: string;
 }) {
+  if (value === null) {
+    return (
+      <div>
+        <dt className="text-sm text-ink-900">{term}</dt>
+        <p className="mt-0.5 text-xs text-ink-500">{hint}</p>
+        <dd className="mt-1 text-sm text-ink-500">対象のお客様がまだいないため、これから始まります</dd>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-start justify-between gap-3">
       <div className="min-w-0">

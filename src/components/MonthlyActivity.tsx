@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 /**
  * 今月コーチ自身が登録した記録のまとめ。
  *
@@ -37,17 +35,11 @@ export function MonthlyActivity({ summary }: { summary: MonthlyActivitySummary }
       </div>
 
       {nothingYet ? (
-        <div className="mt-3 rounded-xl bg-canvas px-3 py-4 text-center">
+        <div className="mt-3 rounded-xl bg-canvas px-3 py-3">
           <p className="text-sm font-medium text-ink-700">今月はまだ登録がありません</p>
           <p className="mt-1 text-xs text-ink-500">
-            レッスンの記録を1件入れるだけで、Score にすぐ反映されます
+            下のボタンから1件入れるだけで、評価にすぐ反映されます
           </p>
-          <Link
-            href="/coach/records/new"
-            className="mt-3 inline-flex min-h-11 items-center justify-center rounded-xl bg-eagle-900 px-5 text-sm font-semibold text-white"
-          >
-            最初の成果を登録する
-          </Link>
         </div>
       ) : (
         <dl className="mt-3 grid grid-cols-2 gap-3">
