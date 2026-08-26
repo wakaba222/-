@@ -81,16 +81,16 @@ export function evaluatePromotion(input: PromotionInput, rules: EvaluationRules)
   const conditions: PromotionCondition[] = [
     {
       code: 'CONSECUTIVE',
-      label: `${rule.consecutiveMonths}ヶ月連続 Professional Score ${rule.consecutiveMinScore}以上`,
+      label: `${rule.consecutiveMonths}ヶ月続けて ${rule.consecutiveMinScore}点以上`,
       currentLabel: `${consecutiveCleared}/${rule.consecutiveMonths}ヶ月`,
       requiredLabel: `${rule.consecutiveMonths}/${rule.consecutiveMonths}ヶ月`,
       met: consecutiveMet,
     },
     {
       code: 'AVERAGE',
-      label: `${rule.averageMonths}ヶ月平均 Professional Score ${rule.averageMinScore}以上`,
-      currentLabel: average === null ? 'N/A' : String(average),
-      requiredLabel: `${rule.averageMinScore}以上`,
+      label: `${rule.averageMonths}ヶ月の平均が ${rule.averageMinScore}点以上`,
+      currentLabel: average === null ? 'N/A' : `${average}点`,
+      requiredLabel: `${rule.averageMinScore}点以上`,
       met: averageMet,
     },
   ];
@@ -98,7 +98,7 @@ export function evaluatePromotion(input: PromotionInput, rules: EvaluationRules)
   if (rule.minLongTermRate !== null) {
     conditions.push({
       code: 'LONG_TERM_RATE',
-      label: `完全成果率 ${formatPercent(rule.minLongTermRate)}以上`,
+      label: `目標を達成したお客様が ${formatPercent(rule.minLongTermRate)}以上`,
       currentLabel: formatPercent(longTermRate),
       requiredLabel: `${formatPercent(rule.minLongTermRate)}以上`,
       met: longTermRate !== null && longTermRate >= rule.minLongTermRate,
@@ -107,7 +107,7 @@ export function evaluatePromotion(input: PromotionInput, rules: EvaluationRules)
 
   conditions.push({
     code: 'BEHAVIOR',
-    label: 'EAGLE行動ルール',
+    label: 'EAGLE行動ルールを守れている',
     currentLabel: behaviorStatus,
     requiredLabel: rule.behaviorStatusAllowed.join(' / '),
     // NG は昇格不可 (仕様20章)

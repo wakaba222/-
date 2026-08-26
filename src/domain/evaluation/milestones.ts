@@ -17,8 +17,6 @@ export interface Milestone {
   code: MilestoneCode;
   /** 何の話か (例: 「売上」) */
   category: string;
-  /** あと何をすればよいか (例: 「あと 155万円」) */
-  action: string;
   /** 「あと」の数量だけを取り出したもの (例: 「155万円」)。大きく見せる用 */
   gap: string;
   /** それで何が起きるか (例: 「売上点 +9.0点」) */
@@ -80,13 +78,12 @@ export function nextSalesMilestone(scoringAmount: number, rules: EvaluationRules
   return {
     code: 'SALES',
     category: useRolling ? '直近3ヶ月の売上' : '今月の売上',
-    action: `あと ${formatManYen(target[0] - scoringAmount)}`,
     gap: formatManYen(target[0] - scoringAmount),
-    reward: `売上点 +${formatPoint(gain)}`,
+    reward: `評価が +${formatPoint(gain)}`,
     state: 'GAP',
     progress: ratio(scoringAmount, target[0]),
     progressLabel: { current: formatManYen(scoringAmount), target: formatManYen(target[0]) },
-    note: `${formatManYen(target[0])} に届くと 売上点が ${formatPoint(nextScore)} になります`,
+    note: `${formatManYen(target[0])} に届くと、売上の評価が満点60点のうち ${formatPoint(nextScore)} になります`,
   };
 }
 
@@ -122,13 +119,12 @@ function rateMilestone(
     return {
       code,
       category,
-      action: `あと ${needed}名`,
       gap: `${needed}名`,
-      reward: `${category}点 +${formatPoint(gain)}`,
+      reward: `評価が +${formatPoint(gain)}`,
       state: 'GAP',
       progress: ratio(achievedCount, goalCount),
       progressLabel: { current: `${achievedCount}名`, target: `${goalCount}名` },
-      note: `達成率 ${formatPercent(currentRate)} → ${formatPercent(reachedRate)} になります`,
+      note: `達成した割合が ${formatPercent(currentRate)} → ${formatPercent(reachedRate)} になります`,
     };
   }
   return null;
@@ -142,7 +138,7 @@ export function nextLongTermMilestone(
 ): Milestone | null {
   return rateMilestone(
     'LONG_TERM',
-    '長期成果',
+    '目標を達成したお客様',
     achievedCount,
     targetCount,
     rules.customerSuccess.longTerm.anchors,
@@ -158,7 +154,7 @@ export function nextShortTermMilestone(
 ): Milestone | null {
   return rateMilestone(
     'SHORT_TERM',
-    '短期成果',
+    '最近3ヶ月の達成',
     achievedCount,
     targetCount,
     rules.customerSuccess.shortTerm.anchors,
@@ -178,8 +174,7 @@ export function nextBonusMilestone(bonus: BonusResult, rules: EvaluationRules): 
     if (!first) return null;
     return {
       code: 'BONUS',
-      category: '四半期ボーナス',
-      action: 'まず月次評価を積み上げる',
+      category: '3ヶ月ごとのボーナス',
       gap: '月次締め後に判定',
       reward: `平均 ${first.min}点で ${first.amount.toLocaleString('ja-JP')}円`,
       state: 'WAITING',
@@ -196,14 +191,13 @@ export function nextBonusMilestone(bonus: BonusResult, rules: EvaluationRules): 
 
   return {
     code: 'BONUS',
-    category: '四半期ボーナス',
-    action: `3ヶ月平均を あと ${formatPoint(next.min - bonus.average)}`,
+    category: '3ヶ月ごとのボーナス',
     gap: formatPoint(next.min - bonus.average),
-    reward: `+${gain.toLocaleString('ja-JP')}円`,
+    reward: `ボーナス +${gain.toLocaleString('ja-JP')}円`,
     state: 'GAP',
     progress: ratio(bonus.average, next.min),
     progressLabel: { current: `${round1(bonus.average)}点`, target: `${next.min}点` },
-    note: `3ヶ月平均が ${next.min}点 に届くと ${next.amount.toLocaleString('ja-JP')}円 になります`,
+    note: `3ヶ月の平均が ${next.min}点 に届くと ${next.amount.toLocaleString('ja-JP')}円 もらえます`,
   };
 }
 
@@ -229,7 +223,9 @@ export function promotionMilestone(
   const rise = nextStandard - currentPrice;
 
   const reward =
-    rise > 0 ? `${toLevel} 昇格・単価 +${rise.toLocaleString('ja-JP')}円` : `${toLevel} へ昇格`;
+    rise > 0
+      ? `${toLevel} にランクアップ・単価 +${rise.toLocaleString('ja-JP')}円`
+      : `${toLevel} にランクアップ`;
 
   const rule = rules.promotion[promotionRuleKey(level, toLevel)];
   const note = rule?.requiresAdminApproval ? '昇格には最終承認が必要です' : undefined;
@@ -240,8 +236,7 @@ export function promotionMilestone(
   if (promotion.shortfalls.length === 0) {
     return {
       code: 'PROMOTION',
-      category: '昇格',
-      action: '条件を全て満たしています',
+      category: 'ランクアップ',
       gap: '条件クリア',
       reward,
       state: 'ACHIEVED',
@@ -251,22 +246,18 @@ export function promotionMilestone(
     };
   }
 
-  // 条件の全文は下の「昇格までの条件」に出るため、ここでは一番近い1件だけに絞る。
-  // スマホで3行に折り返すと「次の一歩」として読み流せなくなるため。
-  const [nearest, ...rest] = promotion.shortfalls;
-  const others = rest.length > 0 ? ` ほか${rest.length}件` : '';
-  const action = `${nearest!.label} を ${nearest!.requiredLabel}${others}`;
+  // 条件の全文は下の「ランクアップ条件」に出るため、ここでは一番近い1件だけを補足に出す
+  const [nearest] = promotion.shortfalls;
 
   return {
     code: 'PROMOTION',
-    category: '昇格',
-    action,
+    category: 'ランクアップ',
     gap: `${promotion.shortfalls.length}条件`,
     reward,
     state: 'GAP',
     progress: ratio(met, total),
     progressLabel: { current: `${met}件`, target: `${total}件` },
-    note: note ?? `${nearest!.label} は現在 ${nearest!.currentLabel}`,
+    note: note ?? `${nearest!.label}（いまは ${nearest!.currentLabel}）`,
   };
 }
 
