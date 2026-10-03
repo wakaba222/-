@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Re:Swing 動画ライブラリ</title>
+<meta name="description" content="Re:Swing の構え方編・スイング編・ドリル集をまとめた動画一覧">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: sticky search header → category chips → one section per course (構え方 → スイング → ドリル), each a responsive 16:9 card grid; click opens a player sheet with "次の動画". */
+:root{
+  --bg:#f4f6f2; --surface:#ffffff; --surface-2:#e9ede6; --fg:#121a15; --muted:#5a685f; --line:#d9dfd5;
+  --accent:#1d7448; --accent-fg:#ffffff; --scrim:rgba(10,16,12,.72);
+  --kamae-a:#1d5c3c; --kamae-b:#2f8a5a;
+  --swing-a:#17405e; --swing-b:#2a6f93;
+  --drill-a:#7a4a17; --drill-b:#b9772f;
+  --font-display:"Dela Gothic One","Hiragino Sans","Yu Gothic",sans-serif;
+  --font-body:"Zen Kaku Gothic New","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+  --radius:12px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1310; --surface:#161d19; --surface-2:#202a24; --fg:#e7ede8; --muted:#97a69c; --line:#2a352e;
+  --accent:#4cc38a; --accent-fg:#06140c; --scrim:rgba(0,0,0,.8); color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0e1310; --surface:#161d19; --surface-2:#202a24; --fg:#e7ede8; --muted:#97a69c; --line:#2a352e;
+  --accent:#4cc38a; --accent-fg:#06140c; --scrim:rgba(0,0,0,.8); color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1320px;margin:0 auto;padding-inline:16px}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line)}
+.top-row{display:flex;align-items:center;gap:16px;padding-block:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;margin-right:auto}
+.logo{width:34px;height:34px;border-radius:9px;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;flex:none}
+.brand h1{font-family:var(--font-display);font-weight:400;font-size:19px;letter-spacing:.01em;margin:0;line-height:1.2;white-space:nowrap}
+.brand small{display:block;font-family:var(--font-body);font-size:12px;color:var(--muted);letter-spacing:.04em}
+.search{flex:1 1 320px;max-width:520px;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:0 6px 0 16px;height:42px}
+.search:focus-within{border-color:var(--accent)}
+.search input{flex:1;min-width:0;border:0;background:transparent;font:inherit;color:var(--fg);outline:none;height:100%}
+.search input::placeholder{color:var(--muted)}
+.search .clear{border:0;background:transparent;color:var(--muted);width:30px;height:30px;border-radius:50%;cursor:pointer}
+.search .clear:hover{background:var(--surface-2)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-block:0 12px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 14px;font-size:14px;font-weight:500;cursor:pointer;display:flex;gap:6px;align-items:center;font-variant-numeric:tabular-nums}
+.chip span{color:var(--muted);font-size:12px}
+.chip:hover{background:var(--surface-2)}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chip[aria-pressed="true"] span{color:inherit;opacity:.7}
+
+/* overview */
+.overview{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:12px;padding-block:20px 4px}
+.ov{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;cursor:pointer;text-align:left}
+.ov:hover{border-color:var(--muted)}
+.ov-dot{width:38px;height:38px;border-radius:10px;flex:none;display:grid;place-items:center;color:#fff;font-family:var(--font-display);font-size:15px}
+.ov-body{min-width:0;flex:1}
+.ov-title{font-weight:700;font-size:15px;line-height:1.3}
+.ov-sub{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{height:4px;border-radius:2px;background:var(--surface-2);margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:2px;transition:width .3s}
+
+/* sections */
+main{padding-block:8px 64px}
+.sec{padding-top:28px}
+.sec-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.sec-head h2{font-family:var(--font-display);font-weight:400;font-size:22px;margin:0;text-wrap:balance}
+.sec-head .count{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.sec-head p{flex-basis:100%;margin:0;color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(270px,100%),1fr));gap:28px 16px}
+.empty{padding:48px 0;text-align:center;color:var(--muted)}
+
+/* card */
+.card{display:flex;flex-direction:column;gap:10px;min-width:0}
+.thumb{position:relative;display:block;width:100%;max-width:100%;aspect-ratio:16/9;border:0;padding:0;border-radius:var(--radius);overflow:hidden;cursor:pointer;background:var(--surface-2)}
+.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .25s,transform .35s}
+.thumb.has-img img{opacity:1}
+.thumb:hover img{transform:scale(1.03)}
+.badge{position:absolute;right:8px;bottom:8px;background:rgba(0,0,0,.78);color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:.03em;z-index:2}
+.seen-flag{position:absolute;left:0;right:0;bottom:0;height:4px;background:var(--accent);z-index:2}
+.play{position:absolute;inset:0;display:grid;place-items:center;z-index:2;opacity:0;transition:opacity .2s;background:rgba(0,0,0,.18)}
+.play svg{width:54px;height:54px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))}
+.thumb:hover .play,.thumb:focus-visible .play{opacity:1}
+
+/* designed fallback tile (shown when no image) */
+.tile{position:absolute;inset:0;color:#fff;padding:12px 14px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;overflow:hidden}
+.tile[data-sec="kamae"]{background:linear-gradient(135deg,var(--kamae-a),var(--kamae-b))}
+.tile[data-sec="swing"]{background:linear-gradient(135deg,var(--swing-a),var(--swing-b))}
+.tile[data-sec="drill"]{background:linear-gradient(135deg,var(--drill-a),var(--drill-b))}
+.tile::after{content:"";position:absolute;right:-18%;top:-30%;width:70%;aspect-ratio:1;border-radius:50%;border:14px solid rgba(255,255,255,.08)}
+.tile-sec{font-size:11px;font-weight:700;letter-spacing:.14em;opacity:.85}
+.tile-num{font-family:var(--font-display);font-size:clamp(40px,7vw,58px);line-height:1;letter-spacing:-.02em}
+.tile-title{font-weight:700;font-size:15px;line-height:1.35;max-width:85%;text-wrap:balance;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.tile-mid{display:flex;align-items:flex-end;gap:12px}
+
+.info{display:flex;gap:10px;align-items:flex-start}
+.info-text{min-width:0;flex:1}
+.info h3{font-size:15px;font-weight:700;line-height:1.4;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+.info .sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+.step{display:inline-block;font-variant-numeric:tabular-nums;font-weight:700;color:var(--accent);margin-right:4px}
+.watch{flex:none;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;font-size:12px;padding:3px 10px;cursor:pointer;white-space:nowrap}
+.watch:hover{background:var(--surface-2)}
+.watch[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+
+/* player sheet */
+.sheet{position:fixed;inset:0;z-index:50;background:var(--scrim);display:flex;justify-content:center;align-items:flex-start;overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 24px) 16px calc(env(safe-area-inset-bottom,0px) + 24px)}
+.panel{background:var(--bg);border-radius:16px;width:100%;max-width:1160px;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;padding:16px;position:relative}
+@media (max-width:900px){.panel{grid-template-columns:minmax(0,1fr)}}
+.stage{position:relative;aspect-ratio:16/9;width:100%;max-width:100%;border-radius:12px;overflow:hidden;background:#000}
+.stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.stage .tile{padding:20px 22px}
+.stage .tile-num{font-size:clamp(56px,10vw,96px)}
+.stage .tile-title{font-size:clamp(17px,2.4vw,24px)}
+.stage-cta{position:absolute;inset:0;display:grid;place-items:center;z-index:3}
+.open-btn{display:inline-flex;align-items:center;gap:8px;background:#fff;color:#111;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.open-btn:hover{transform:translateY(-1px)}
+.now h2{font-size:clamp(18px,2.2vw,22px);margin:14px 0 6px;line-height:1.4;text-wrap:balance}
+.now-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--muted);font-size:13px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:8px 16px;font-size:14px;font-weight:500;cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--surface-2)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.primary{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.close{position:absolute;top:-12px;right:-6px;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:20px;line-height:1;z-index:5}
+@media (max-width:600px){.close{top:8px;right:8px}}
+.upnext h3{font-size:14px;margin:0 0 10px;color:var(--muted);font-weight:700;letter-spacing:.04em}
+.upnext ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;max-height:min(70vh,640px);overflow-y:auto}
+.un{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;align-items:start;border:0;background:transparent;text-align:left;padding:4px;border-radius:10px;cursor:pointer;width:100%}
+.un:hover{background:var(--surface-2)}
+.un[aria-current="true"]{background:var(--surface-2);box-shadow:inset 3px 0 0 var(--accent)}
+.un .thumb{border-radius:8px}
+.un .tile{padding:6px 8px}
+.un .tile-num{font-size:26px}
+.un .tile-title,.un .tile-sec{display:none}
+.un-t{font-size:13.5px;font-weight:700;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.un-s{font-size:12px;color:var(--muted)}
+footer{color:var(--muted);font-size:12px;padding-block:24px 40px;border-top:1px solid var(--line)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="top-row">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="7" r="4" fill="currentColor"/><path d="M12 11v10M8 21h8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></div>
+        <h1>Re:Swing<small>動画ライブラリ</small></h1>
+      </div>
+      <label class="search" for="q">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" opacity=".6"/><path d="m20 20-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".6"/></svg>
+        <input id="q" type="search" placeholder="動画を検索（例：グリップ、前傾、素振り）" autocomplete="off">
+        <button class="clear" id="clear" type="button" aria-label="検索をクリア" hidden>✕</button>
+      </label>
+    </div>
+    <nav class="chips" id="chips" aria-label="カテゴリ"></nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="overview" id="overview" aria-label="コースごとの視聴状況"></section>
+  <main id="main"></main>
+  <footer>動画を開くと「視聴済み」になります。視聴記録はこのブラウザにだけ保存されます。</footer>
+</div>
+
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="now-title">
+  <div class="panel">
+    <button class="close" id="close" type="button" aria-label="閉じる">×</button>
+    <div class="now">
+      <div class="stage" id="stage"></div>
+      <h2 id="now-title"></h2>
+      <div class="now-meta" id="now-meta"></div>
+      <div class="actions">
+        <button class="btn" id="prev" type="button">← 前の動画</button>
+        <button class="btn primary" id="next" type="button">次の動画 →</button>
+        <button class="btn" id="now-watch" type="button" aria-pressed="false">視聴済みにする</button>
+        <a class="btn" id="ext" href="#" target="_blank" rel="noopener">別タブで開く ↗</a>
+      </div>
+    </div>
+    <aside class="upnext">
+      <h3 id="upnext-title">このコースの動画</h3>
+      <ol id="upnext"></ol>
+    </aside>
+  </div>
+</div>
+
+<script>
+const SECTIONS = [
+  { key: 'kamae', name: '構え方編', short: '構え', desc: 'アドレス・グリップ・前傾など、当たる構えをつくる基礎', color: 'var(--kamae-b)' },
+  { key: 'swing', name: 'スイング編', short: 'スイング', desc: 'クラブの扱い方からフィニッシュまで、スイングの流れを順に', color: 'var(--swing-b)' },
+  { key: 'drill', name: 'ドリル集', short: 'ドリル', desc: 'レッスン内容を自主練で身につけるための練習ドリル', color: 'var(--drill-b)' },
+];
+const yt = (sec, step, title, id) => ({ sec, step, title, src: 'yt', id });
+const gd = (sec, step, title, id) => ({ sec, step, title, src: 'gd', id });
+const VIDEOS = [
+  yt('kamae', 1, '当たる正しいアドレス', 'vf-HaatPbw4'),
+  yt('kamae', 2, '正しい握り方【前編】', 'ol44-t-FkXQ'),
+  yt('kamae', 3, '正しい握り方【後編】', 'ZqpIKE7fkqQ'),
+  yt('kamae', 4, '正しい前傾の仕方', '7cn3cTPYoqY'),
+  yt('kamae', 5, '肩甲骨をハメる', 'xzWok5Efq54'),
+  yt('kamae', 6, 'フェース面の向け方', 'prQ0Kb_ogNs'),
+  yt('kamae', 7, '細かいチェックポイント', 'dvPqGWbsE4o'),
+  yt('swing', 8, '正しいクラブの扱い方', 'P4mLVNtD7T8'),
+  yt('swing', 9, 'クラブを邪魔しない超基本', 'OWwzlvDoDEc'),
+  yt('swing', 10, '狙った場所に飛ばすコントロール', 'OcWtRsC2HL8'),
+  yt('swing', 11, 'ボールの当て方の基本', 'tuwsJRglkjo'),
+  yt('swing', 12, 'クラブを邪魔しないバックスイングのやり方', '1Y97llf3J00'),
+  yt('swing', 13, '最大円弧', '8JTTJMkjI7c'),
+  yt('swing', 14, '加速装置としての右手の役割', 'Ob_E8zNECOU'),
+  yt('swing', 15, '正しいフォローフィニッシュの作り方', 'yhJHUW5BQbM'),
+  yt('swing', 16, '最後の砦 連続素振り', 'SvaQj07ddQM'),
+  gd('drill', 1, 'グリップ【前編】', '1Sa1AL-o50Dk8AgMb8--m222OK_B-Vp7z'),
+  gd('drill', 1, 'グリップ【後編】', '1tMRcUFHQDE2YZKw9o-YgIOGVKbwIkGXE'),
+  gd('drill', 2, '正しい前傾の作り方', '1XngY86T-6IYDL8P91_eMU155UWryeS7i'),
+  gd('drill', 3, '肩甲骨をハメる', '1mFd_1XaU19vwJ-4ntMxFD025JE21Ty7w'),
+  gd('drill', 4, 'フェースの向き', '12cwyoUYVIYn8ngafNO4Te9miCPzoS1wn'),
+  gd('drill', 5, '両足のデザイン', '1J_t7Ar5cwpxUGSjTBy3bUoiWz0UT_7H7'),
+  gd('drill', 6, '腰の位置', '157OijUxZnZDaz4PlFO3nscMWXl3ihbei'),
+  gd('drill', 7, '膝の向き', '1OcCEU7TBY4bXtBTQAfj0GJd_f9WORNng'),
+  gd('drill', 8, '振り子キャッチ', '1hiXCnL0GIXR7XuF0Sr9cKx0dRxJSGObY'),
+  gd('drill', 9, '一回転ドリル', '1zMpREltkYaLK3WxHg30WHtT6rbujIPhq'),
+  gd('drill', 10, 'つまむ連続素振り', '1fZHOhyJMvbrTfSYAutQvkzwDA46mqL_H'),
+  gd('drill', 11, '一回転叩きドリル', '1HX6rA5KbbOIIUuMfTDw4D80xfV6GvisT'),
+  gd('drill', 12, 'テコの原理ドリル', '1j21RJNhzAyI--6wWfnuZWhiZcJwrkCVc'),
+  gd('drill', 13, '大の字練習', '1RhuJO8MgO36i6d_ukQS0vTD_ZfC_oAGa'),
+  gd('drill', 14, '右手を叩くドリル', '1JIamnAmLnwo0m8KmZwQo3eAKaDfECNe7'),
+  gd('drill', 15, '左手一本練習', '1um0O8oTKPQ_hAy10ItfigynS3b_0iNY2'),
+  gd('drill', 16, '歌舞伎ドリル', '1YT9WhGEinKYS3EyVRA4SQtPr6DgTQIok'),
+  gd('drill', 17, '連続素振り', '19V1NIh4EzTXffYyNkz2kO8zMewLnUUgV'),
+].map((v, i) => ({ ...v, idx: i, key: v.src + ':' + v.id }));
+
+const secOf = k => SECTIONS.find(s => s.key === k);
+const thumbUrl = v => v.src === 'yt' ? `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg` : `https://drive.google.com/thumbnail?id=${v.id}&sz=w640`;
+const watchUrl = v => v.src === 'yt' ? `https://www.youtube.com/watch?v=${v.id}` : `https://drive.google.com/file/d/${v.id}/view`;
+const embedUrl = v => v.src === 'yt' ? `https://www.youtube-nocookie.com/embed/${v.id}?autoplay=1&rel=0&playsinline=1` : `https://drive.google.com/file/d/${v.id}/preview`;
+const srcLabel = v => v.src === 'yt' ? 'YouTube' : 'ドライブ';
+const stepLabel = v => v.sec === 'drill' ? `ドリル${v.step}` : `STEP ${v.step}`;
+const pad = n => String(n).padStart(2, '0');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const norm = s => s.normalize('NFKC').toLowerCase().replace(/[\s【】・]/g, '');
+
+// 外部の画像が読み込めた環境なら、動画もページ内で再生できるとみなす
+let canEmbed = false;
+
+// 視聴記録 (このブラウザだけ)
+const STORE = 'reswing-watched-v1';
+let watched = new Set();
+try { watched = new Set(JSON.parse(localStorage.getItem(STORE) || '[]')); } catch (e) {}
+const saveWatched = () => { try { localStorage.setItem(STORE, JSON.stringify([...watched])); } catch (e) {} };
+
+let filter = 'all';
+let query = '';
+const VALID = ['all', ...SECTIONS.map(s => s.key)];
+const fromHash = location.hash.slice(1);
+if (VALID.includes(fromHash)) filter = fromHash;
+else { try { const f = localStorage.getItem('reswing-filter'); if (VALID.includes(f)) filter = f; } catch (e) {} }
+
+function tileHTML(v) {
+  const s = secOf(v.sec);
+  return `<div class="tile" data-sec="${v.sec}">
+    <div class="tile-sec">${esc(s.name)}</div>
+    <div class="tile-mid"><div class="tile-num">${pad(v.step)}</div></div>
+    <div class="tile-title">${esc(v.title)}</div>
+  </div>`;
+}
+function thumbHTML(v, extraClass = '') {
+  return `${tileHTML(v)}
+    <img src="${thumbUrl(v)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-thumb>
+    <span class="play" aria-hidden="true"><svg viewBox="0 0 68 48"><path d="M66.5 7.7c-.8-2.9-2.5-5.4-5.4-6.2C55.8.1 34 0 34 0S12.2.1 6.9 1.6c-3 .7-4.6 3.2-5.4 6.1C.1 13 0 24 0 24s.1 11 1.5 16.3c.8 2.8 2.5 5.3 5.4 6.1C12.2 47.9 34 48 34 48s21.8-.1 27.1-1.6c2.9-.8 4.6-3.3 5.4-6.1C67.9 35 68 24 68 24s-.1-11-1.5-16.3z" fill="rgba(0,0,0,.72)"/><path d="M45 24 27 14v20" fill="#fff"/></svg></span>
+    <span class="badge">${srcLabel(v)}</span>
+    ${watched.has(v.key) ? '<span class="seen-flag" aria-hidden="true"></span>' : ''}`;
+}
+function wireThumbs(root) {
+  root.querySelectorAll('img[data-thumb]').forEach(img => {
+    const box = img.parentElement;
+    const ok = () => {
+      // Drive は未公開ファイルだと小さなアイコンを返すので実サイズで判定
+      if (img.naturalWidth < 120) return bad();
+      box.classList.add('has-img'); canEmbed = true;
+    };
+    const bad = () => img.remove();
+    if (img.complete && img.naturalWidth) ok(); else { img.addEventListener('load', ok, { once: true }); img.addEventListener('error', bad, { once: true }); }
+  });
+}
+
+function matches(v) {
+  if (filter !== 'all' && v.sec !== filter) return false;
+  if (!query) return true;
+  const q = norm(query);
+  return norm(v.title + secOf(v.sec).name + stepLabel(v) + srcLabel(v)).includes(q);
+}
+
+function renderChips() {
+  const chips = [{ key: 'all', name: 'すべて', n: VIDEOS.length }, ...SECTIONS.map(s => ({ key: s.key, name: s.name, n: VIDEOS.filter(v => v.sec === s.key).length }))];
+  document.getElementById('chips').innerHTML = chips.map(c =>
+    `<button class="chip" type="button" data-filter="${c.key}" aria-pressed="${filter === c.key}">${esc(c.name)}<span>${c.n}</span></button>`).join('');
+}
+function renderOverview() {
+  document.getElementById('overview').innerHTML = SECTIONS.map(s => {
+    const list = VIDEOS.filter(v => v.sec === s.key);
+    const done = list.filter(v => watched.has(v.key)).length;
+    const next = list.find(v => !watched.has(v.key));
+    return `<button class="ov" type="button" data-filter="${s.key}">
+      <span class="ov-dot" style="background:${s.color}">${list.length}</span>
+      <span class="ov-body">
+        <span class="ov-title">${esc(s.name)}</span>
+        <span class="ov-sub">${done} / ${list.length} 本 視聴済み${next ? ` ・ 次は「${esc(next.title)}」` : ' ・ すべて視聴済み'}</span>
+        <span class="bar"><i style="width:${list.length ? done / list.length * 100 : 0}%"></i></span>
+      </span>
+    </button>`;
+  }).join('');
+}
+function cardHTML(v) {
+  const on = watched.has(v.key);
+  return `<article class="card">
+    <button class="thumb" type="button" data-open="${v.idx}" aria-label="${esc(v.title)} を再生">${thumbHTML(v)}</button>
+    <div class="info">
+      <div class="info-text">
+        <h3 data-open="${v.idx}"><span class="step">${stepLabel(v)}</span>${esc(v.title)}</h3>
+        <div class="sub">${esc(secOf(v.sec).name)} ・ ${srcLabel(v)}</div>
+      </div>
+      <button class="watch" type="button" data-watch="${v.idx}" aria-pressed="${on}">${on ? '✓ 視聴済み' : '未視聴'}</button>
+    </div>
+  </article>`;
+}
+function renderMain() {
+  const main = document.getElementById('main');
+  const secs = SECTIONS.filter(s => filter === 'all' || s.key === filter);
+  let html = '';
+  for (const s of secs) {
+    const list = VIDEOS.filter(v => v.sec === s.key && matches(v));
+    if (!list.length) continue;
+    const all = VIDEOS.filter(v => v.sec === s.key);
+    const done = all.filter(v => watched.has(v.key)).length;
+    html += `<section class="sec" id="sec-${s.key}">
+      <div class="sec-head"><h2>${esc(s.name)}</h2><span class="count">${query ? `${list.length} 件ヒット` : `${all.length} 本 ・ ${done} 本視聴済み`}</span><p>${esc(s.desc)}</p></div>
+      <div class="grid">${list.map(cardHTML).join('')}</div>
+    </section>`;
+  }
+  main.innerHTML = html || `<div class="empty">「${esc(query)}」に一致する動画はありません。別の言葉で検索してください。</div>`;
+  wireThumbs(main);
+}
+function renderAll() { renderChips(); renderOverview(); renderMain(); }
+
+function setFilter(f) {
+  filter = f;
+  try { localStorage.setItem('reswing-filter', f); } catch (e) {}
+  history.replaceState(null, '', f === 'all' ? location.pathname + location.search : '#' + f);
+  renderAll();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function toggleWatched(v, force) {
+  const on = force ?? !watched.has(v.key);
+  on ? watched.add(v.key) : watched.delete(v.key);
+  saveWatched();
+}
+
+document.addEventListener('click', e => {
+  const f = e.target.closest('[data-filter]');
+  if (f) return setFilter(f.dataset.filter);
+  const o = e.target.closest('[data-open]');
+  if (o) return openPlayer(+o.dataset.open);
+  const w = e.target.closest('[data-watch]');
+  if (w) { toggleWatched(VIDEOS[+w.dataset.watch]); renderOverview(); renderMain(); }
+});
+const q = document.getElementById('q'), clearBtn = document.getElementById('clear');
+q.addEventListener('input', () => { query = q.value.trim(); clearBtn.hidden = !q.value; renderMain(); });
+clearBtn.addEventListener('click', () => { q.value = ''; query = ''; clearBtn.hidden = true; renderMain(); q.focus(); });
+
+// ---- player ----
+const sheet = document.getElementById('sheet');
+let current = -1, lastFocus = null;
+function openPlayer(i) {
+  if (current < 0) lastFocus = document.activeElement;
+  current = i;
+  const v = VIDEOS[i], s = secOf(v.sec);
+  toggleWatched(v, true);
+  const stage = document.getElementById('stage');
+  if (canEmbed) {
+    stage.innerHTML = `<iframe src="${embedUrl(v)}" title="${esc(v.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+  } else {
+    stage.innerHTML = `${tileHTML(v)}<div class="stage-cta"><a class="open-btn" href="${watchUrl(v)}" target="_blank" rel="noopener">▶ ${srcLabel(v)}で再生する</a></div>`;
+  }
+  document.getElementById('now-title').textContent = v.title;
+  document.getElementById('now-meta').innerHTML = `<span class="step">${stepLabel(v)}</span><span>${esc(s.name)}</span><span>・</span><span>${srcLabel(v)}</span>`;
+  document.getElementById('ext').href = watchUrl(v);
+  document.getElementById('prev').disabled = i === 0;
+  document.getElementById('next').disabled = i === VIDEOS.length - 1;
+  const nw = document.getElementById('now-watch');
+  nw.setAttribute('aria-pressed', 'true'); nw.textContent = '✓ 視聴済み';
+  document.getElementById('upnext-title').textContent = `${s.name}（${VIDEOS.filter(x => x.sec === v.sec).length}本）`;
+  const ol = document.getElementById('upnext');
+  ol.innerHTML = VIDEOS.filter(x => x.sec === v.sec).map(x => `<li><button class="un" type="button" data-open="${x.idx}" ${x.idx === i ? 'aria-current="true"' : ''}>
+      <span class="thumb">${thumbHTML(x)}</span>
+      <span><span class="un-t">${esc(x.title)}</span><span class="un-s">${stepLabel(x)}${watched.has(x.key) ? ' ・ 視聴済み' : ''}</span></span>
+    </button></li>`).join('');
+  wireThumbs(ol);
+  sheet.hidden = false;
+  document.body.style.overflow = 'hidden';
+  ol.querySelector('[aria-current]')?.scrollIntoView({ block: 'nearest' });
+  document.getElementById('close').focus({ preventScroll: true });
+  renderOverview(); renderMain();
+}
+function closePlayer() {
+  sheet.hidden = true; current = -1;
+  document.getElementById('stage').innerHTML = '';
+  document.body.style.overflow = '';
+  lastFocus?.focus?.({ preventScroll: true });
+}
+document.getElementById('close').addEventListener('click', closePlayer);
+sheet.addEventListener('click', e => { if (e.target === sheet) closePlayer(); });
+document.getElementById('prev').addEventListener('click', () => current > 0 && openPlayer(current - 1));
+document.getElementById('next').addEventListener('click', () => current < VIDEOS.length - 1 && openPlayer(current + 1));
+document.getElementById('now-watch').addEventListener('click', e => {
+  const v = VIDEOS[current]; toggleWatched(v);
+  const on = watched.has(v.key);
+  e.currentTarget.setAttribute('aria-pressed', on); e.currentTarget.textContent = on ? '✓ 視聴済み' : '視聴済みにする';
+  renderOverview(); renderMain();
+});
+document.addEventListener('keydown', e => {
+  if (sheet.hidden) { if (e.key === '/' && document.activeElement !== q) { e.preventDefault(); q.focus(); } return; }
+  if (e.key === 'Escape') closePlayer();
+});
+
+renderAll();
+</script>
+</body>
+</html>
