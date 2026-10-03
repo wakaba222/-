@@ -25,6 +25,8 @@
   --radius:4px;
 }
 *{box-sizing:border-box}
+html,body{margin:0}
+img{max-width:100%}
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased;
   background-image:radial-gradient(1200px 600px at 80% -10%,rgba(201,169,110,.07),transparent 60%),radial-gradient(900px 500px at -10% 20%,rgba(29,74,53,.18),transparent 60%);background-attachment:fixed}
@@ -126,49 +128,6 @@ main{padding-block:12px 80px}
 .watch:hover{border-color:var(--gold);color:var(--gold-hi)}
 .watch[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:var(--on-gold);font-weight:700}
 
-/* cinema sheet */
-.sheet{position:fixed;inset:0;z-index:50;background:var(--scrim);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;justify-content:center;align-items:flex-start;overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 28px) 16px calc(env(safe-area-inset-bottom,0px) + 28px)}
-.panel{background:var(--bg-2);border:1px solid var(--line);border-radius:6px;width:100%;max-width:1200px;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:28px;padding:22px;position:relative;box-shadow:0 40px 120px -30px rgba(0,0,0,.9)}
-@media (max-width:900px){.panel{grid-template-columns:minmax(0,1fr);padding:14px;gap:20px}}
-.stage{position:relative;aspect-ratio:16/9;width:100%;max-width:100%;border-radius:var(--radius);overflow:hidden;background:#000;border:1px solid var(--line)}
-.stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.stage .tile{padding:22px 26px}
-.stage .tile::before{inset:12px}
-.stage .tile-num{font-size:clamp(64px,11vw,120px)}
-.stage .tile-title{font-size:clamp(18px,2.4vw,26px)}
-.stage .tile-sec{font-size:12px}
-.stage-cta{position:absolute;inset:0;display:grid;place-items:center;z-index:5;background:rgba(0,0,0,.18)}
-.stage img.still{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
-.open-btn{display:inline-flex;align-items:center;gap:12px;background:var(--gold);color:var(--on-gold);text-decoration:none;font-weight:700;letter-spacing:.1em;font-size:14px;padding:14px 26px;border-radius:2px;box-shadow:0 10px 30px rgba(0,0,0,.5);transition:background .25s}
-.open-btn:hover{background:var(--gold-hi)}
-.open-btn::before{content:"";border-style:solid;border-width:6px 0 6px 10px;border-color:transparent transparent transparent currentColor}
-.now .step{margin-top:20px}
-.now h2{font-family:var(--font-display);font-weight:600;font-size:clamp(20px,2.4vw,26px);letter-spacing:.06em;margin:0 0 6px;line-height:1.45;text-wrap:balance}
-.now-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--muted);font-size:13px;letter-spacing:.04em}
-.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
-.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-strong);background:transparent;color:var(--fg);border-radius:2px;padding:9px 16px;font-size:13px;letter-spacing:.08em;cursor:pointer;text-decoration:none;transition:all .25s}
-.btn:hover{border-color:var(--gold);color:var(--gold-hi)}
-.btn:disabled{opacity:.3;cursor:default}
-.btn.primary{background:var(--gold);border-color:var(--gold);color:var(--on-gold);font-weight:700}
-.btn.primary:hover{background:var(--gold-hi);color:var(--on-gold)}
-.btn[aria-pressed="true"]{color:var(--gold-hi);border-color:var(--gold)}
-.close{position:absolute;top:-16px;right:-16px;width:40px;height:40px;border-radius:50%;border:1px solid var(--gold);background:var(--bg-2);color:var(--gold-hi);cursor:pointer;font-size:20px;line-height:1;z-index:6}
-@media (max-width:640px){.close{top:6px;right:6px}}
-.upnext h3{margin:0 0 14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
-.upnext h3 .eyebrow{display:block;font-size:11px}
-.upnext h3 b{font-family:var(--font-display);font-weight:600;font-size:16px;letter-spacing:.08em}
-.upnext ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:min(68vh,640px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--gold-lo) transparent}
-.un{display:grid;grid-template-columns:132px minmax(0,1fr);gap:12px;align-items:center;border:0;background:transparent;text-align:left;padding:6px;border-radius:3px;cursor:pointer;width:100%;transition:background .25s}
-.un:hover{background:rgba(201,169,110,.06)}
-.un[aria-current="true"]{background:rgba(201,169,110,.1)}
-.un[aria-current="true"] .un-t{color:var(--gold-hi)}
-.un .thumb{box-shadow:none}
-.un .tile{padding:6px 8px}
-.un .tile::before{inset:4px}
-.un .tile-num{font-size:30px}
-.un .tile-title,.un .tile-sec,.un .badge,.un .seen-flag{display:none}
-.un-t{display:block;font-family:var(--font-display);font-size:13.5px;font-weight:600;line-height:1.45;letter-spacing:.04em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.un-s{display:block;font-family:var(--font-latin);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-top:2px}
 footer{color:var(--faint);font-size:12px;letter-spacing:.04em;padding-block:28px 48px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 footer .eyebrow{font-size:11px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -272,6 +231,14 @@ a.resume:hover{border-color:var(--gold);background:linear-gradient(90deg,rgba(20
 .resume{grid-template-columns:auto minmax(0,1fr)}
 .resume-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:600px){.resume{padding:12px 14px;gap:12px}.resume-play{width:40px;height:40px}.resume-title{font-size:15.5px}}
+
+/* robustness */
+@supports not (aspect-ratio: 16/9){.thumb{height:0;padding-top:56.25%}.grid.list .thumb{height:0;padding-top:56.25%}}
+.chip.is-empty{opacity:.35}
+.card{touch-action:manipulation}
+.tile-num,.tile-title,.tile-sec{display:block}
+.grid.list .tile-title,.grid.list .tile-sec{display:none}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 </style>
 </head>
 <body>
@@ -291,7 +258,7 @@ a.resume:hover{border-color:var(--gold);background:linear-gradient(90deg,rgba(20
       <input id="q" type="search" placeholder="動画を探す（グリップ、前傾、素振り…）" autocomplete="off" enterkeyhint="search">
       <button class="clear" id="clear" type="button" aria-label="検索をクリア" hidden>✕</button>
     </label>
-    <nav class="chips" id="chips" aria-label="コースへ移動"></nav>
+    <nav class="chips" id="chips" aria-label="コースへ移動"><a class="chip" href="#kamae" data-jump="kamae">構え方編<span>7</span></a><a class="chip" href="#swing" data-jump="swing">スイング編<span>9</span></a><a class="chip" href="#drill" data-jump="drill">ドリル集<span>18</span></a></nav>
     <div class="seg" role="group" aria-label="表示の切り替え">
       <button class="tool" id="view-grid" type="button" aria-pressed="true" aria-label="カードで表示"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="0" y="0" width="6" height="6" fill="currentColor"/><rect x="8" y="0" width="6" height="6" fill="currentColor"/><rect x="0" y="8" width="6" height="6" fill="currentColor"/><rect x="8" y="8" width="6" height="6" fill="currentColor"/></svg></button>
       <button class="tool" id="view-list" type="button" aria-pressed="false" aria-label="リストで表示"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="0" y="1" width="14" height="2" fill="currentColor"/><rect x="0" y="6" width="14" height="2" fill="currentColor"/><rect x="0" y="11" width="14" height="2" fill="currentColor"/></svg></button>
@@ -305,261 +272,273 @@ a.resume:hover{border-color:var(--gold);background:linear-gradient(90deg,rgba(20
     <h2>構えから、<br>振り切るまで。</h2>
     <p>タイトルかサムネイルをタップすると、その動画がすぐに開きます。</p>
   </section>
-  <main id="main"></main>
+  <main id="main"><section class="sec" id="kamae"><div class="sec-head"><span class="eyebrow">Course I — Address</span><h2>構え方編</h2><span class="count">全7本</span><p>アドレス、グリップ、前傾。ボールに当たる構えをつくる基礎の7本。</p></div><div class="grid"><a class="card" href="https://www.youtube.com/watch?v=vf-HaatPbw4" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="kamae"><span class="tile-sec">Address</span><span class="tile-num">01</span><span class="tile-title">当たる正しいアドレス</span></span><img src="https://i.ytimg.com/vi/vf-HaatPbw4/hqdefault.jpg" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">YouTube</span></span><span class="info"><span class="step">Lesson 01</span><span class="info-title">当たる正しいアドレス</span><span class="sub">YouTubeで開く ↗</span></span></a><a class="card" href="https://www.youtube.com/watch?v=ol44-t-FkXQ" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="kamae"><span class="tile-sec">Address</span><span class="tile-num">02</span><span class="tile-title">正しい握り方【前編】</span></span><img src="https://i.ytimg.com/vi/ol44-t-FkXQ/hqdefault.jpg" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">YouTube</span></span><span class="info"><span class="step">Lesson 02</span><span class="info-title">正しい握り方【前編】</span><span class="sub">YouTubeで開く ↗</span></span></a><a class="card" href="https://www.youtube.com/watch?v=ZqpIKE7fkqQ" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="kamae"><span class="tile-sec">Address</span><span class="tile-num">03</span><span class="tile-title">正しい握り方【後編】</span></span><img src="https://i.ytimg.com/vi/ZqpIKE7fkqQ/hqdefault.jpg" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">YouTube</span></span><span class="info"><span class="step">Lesson 03</span><span class="info-title">正しい握り方【後編】</span><span class="sub">YouTubeで開く ↗</span></span></a><a class="card" href="https://www.youtube.com/watch?v=7cn3cTPYoqY" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="kamae"><span class="tile-sec">Address</span><span class="tile-num">04</span><span class="tile-title">正しい前傾の仕方</span></span><img src="https://i.ytimg.com/vi/7cn3cTPYoqY/hqdefault.jpg" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">YouTube</span></span><span class="info"><span class="step">Lesson 04</span><span class="info-title">正しい前傾の仕方</span><span class="sub">YouTubeで開く ↗</span></span></a><a class="card" href="https://www.youtube.com/watch?v=xzWok5Efq54" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="kamae"><span class="tile-sec">Address</span><span class="tile-num">05</span><span class="tile-title">肩甲骨をハメる</span></span><img src="https://i.ytimg.com/vi/xzWok5Efq54/hqdefault.jpg" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">YouTube</span></span><span class="info"><span class="step">Lesson 05</span><span class="info-title">肩甲骨をハメる</span><span class="sub">YouTubeで開く ↗</span></span></a><a class="card" href="https://www.youtube.com/watch?v=prQ0Kb_ogNs" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="kamae"><span class="tile-sec">Address</span><span class="tile-num">06</span><span class="tile-title">フェース面の向け方</span></span><img src="https://i.ytimg.com/vi/prQ0Kb_ogNs/hqdefault.jpg" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">YouTube</span></span><span class="info"><span class="step">Lesson 06</span><span class="info-title">フェース面の向け方</span><span class="sub">YouTubeで開く ↗</span></span></a><a class="card" href="https://www.youtube.com/watch?v=dvPqGWbsE4o" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="kamae"><span class="tile-sec">Address</span><span class="tile-num">07</span><span class="tile-title">細かいチェックポイント</span></span><img src="https://i.ytimg.com/vi/dvPqGWbsE4o/hqdefault.jpg" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">YouTube</span></span><span class="info"><span class="step">Lesson 07</span><span class="info-title">細かいチェックポイント</span><span class="sub">YouTubeで開く ↗</span></span></a></div></section><section class="sec" id="swing"><div class="sec-head"><span class="eyebrow">Course II — Swing</span><h2>スイング編</h2><span class="count">全9本</span><p>クラブの扱い方からフォロー、フィニッシュまで。スイングの流れを順に9本。</p></div><div class="grid"><a class="card" href="https://www.youtube.com/watch?v=P4mLVNtD7T8" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="swing"><span class="tile-sec">Swing</span><span class="tile-num">08</span><span class="tile-title">正しいクラブの扱い方</span></span><img src="https://i.ytimg.com/vi/P4mLVNtD7T8/hqdefault.jpg" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">YouTube</span></span><span class="info"><span class="step">Lesson 08</span><span class="info-title">正しいクラブの扱い方</span><span class="sub">YouTubeで開く ↗</span></span></a><a class="card" href="https://www.youtube.com/watch?v=OWwzlvDoDEc" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="swing"><span class="tile-sec">Swing</span><span class="tile-num">09</span><span class="tile-title">クラブを邪魔しない超基本</span></span><img src="https://i.ytimg.com/vi/OWwzlvDoDEc/hqdefault.jpg" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">YouTube</span></span><span class="info"><span class="step">Lesson 09</span><span class="info-title">クラブを邪魔しない超基本</span><span class="sub">YouTubeで開く ↗</span></span></a><a class="card" href="https://www.youtube.com/watch?v=OcWtRsC2HL8" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="swing"><span class="tile-sec">Swing</span><span class="tile-num">10</span><span class="tile-title">狙った場所に飛ばすコントロール</span></span><img src="https://i.ytimg.com/vi/OcWtRsC2HL8/hqdefault.jpg" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">YouTube</span></span><span class="info"><span class="step">Lesson 10</span><span class="info-title">狙った場所に飛ばすコントロール</span><span class="sub">YouTubeで開く ↗</span></span></a><a class="card" href="https://www.youtube.com/watch?v=tuwsJRglkjo" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="swing"><span class="tile-sec">Swing</span><span class="tile-num">11</span><span class="tile-title">ボールの当て方の基本</span></span><img src="https://i.ytimg.com/vi/tuwsJRglkjo/hqdefault.jpg" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">YouTube</span></span><span class="info"><span class="step">Lesson 11</span><span class="info-title">ボールの当て方の基本</span><span class="sub">YouTubeで開く ↗</span></span></a><a class="card" href="https://www.youtube.com/watch?v=1Y97llf3J00" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="swing"><span class="tile-sec">Swing</span><span class="tile-num">12</span><span class="tile-title">クラブを邪魔しないバックスイングのやり方</span></span><img src="https://i.ytimg.com/vi/1Y97llf3J00/hqdefault.jpg" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">YouTube</span></span><span class="info"><span class="step">Lesson 12</span><span class="info-title">クラブを邪魔しないバックスイングのやり方</span><span class="sub">YouTubeで開く ↗</span></span></a><a class="card" href="https://www.youtube.com/watch?v=8JTTJMkjI7c" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="swing"><span class="tile-sec">Swing</span><span class="tile-num">13</span><span class="tile-title">最大円弧</span></span><img src="https://i.ytimg.com/vi/8JTTJMkjI7c/hqdefault.jpg" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">YouTube</span></span><span class="info"><span class="step">Lesson 13</span><span class="info-title">最大円弧</span><span class="sub">YouTubeで開く ↗</span></span></a><a class="card" href="https://www.youtube.com/watch?v=Ob_E8zNECOU" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="swing"><span class="tile-sec">Swing</span><span class="tile-num">14</span><span class="tile-title">加速装置としての右手の役割</span></span><img src="https://i.ytimg.com/vi/Ob_E8zNECOU/hqdefault.jpg" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">YouTube</span></span><span class="info"><span class="step">Lesson 14</span><span class="info-title">加速装置としての右手の役割</span><span class="sub">YouTubeで開く ↗</span></span></a><a class="card" href="https://www.youtube.com/watch?v=yhJHUW5BQbM" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="swing"><span class="tile-sec">Swing</span><span class="tile-num">15</span><span class="tile-title">正しいフォローフィニッシュの作り方</span></span><img src="https://i.ytimg.com/vi/yhJHUW5BQbM/hqdefault.jpg" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">YouTube</span></span><span class="info"><span class="step">Lesson 15</span><span class="info-title">正しいフォローフィニッシュの作り方</span><span class="sub">YouTubeで開く ↗</span></span></a><a class="card" href="https://www.youtube.com/watch?v=SvaQj07ddQM" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="swing"><span class="tile-sec">Swing</span><span class="tile-num">16</span><span class="tile-title">最後の砦 連続素振り</span></span><img src="https://i.ytimg.com/vi/SvaQj07ddQM/hqdefault.jpg" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">YouTube</span></span><span class="info"><span class="step">Lesson 16</span><span class="info-title">最後の砦 連続素振り</span><span class="sub">YouTubeで開く ↗</span></span></a></div></section><section class="sec" id="drill"><div class="sec-head"><span class="eyebrow">Course III — Drills</span><h2>ドリル集</h2><span class="count">全18本</span><p>レッスンで学んだ動きを、自主練で体に覚えさせるための18本。</p></div><div class="grid"><a class="card" href="https://drive.google.com/file/d/1Sa1AL-o50Dk8AgMb8--m222OK_B-Vp7z/view" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="drill"><span class="tile-sec">Drills</span><span class="tile-num">01</span><span class="tile-title">グリップ【前編】</span></span><img src="https://drive.google.com/thumbnail?id=1Sa1AL-o50Dk8AgMb8--m222OK_B-Vp7z&sz=w640" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">Drive</span></span><span class="info"><span class="step">Drill 01</span><span class="info-title">グリップ【前編】</span><span class="sub">Googleドライブで開く ↗</span></span></a><a class="card" href="https://drive.google.com/file/d/1tMRcUFHQDE2YZKw9o-YgIOGVKbwIkGXE/view" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="drill"><span class="tile-sec">Drills</span><span class="tile-num">01</span><span class="tile-title">グリップ【後編】</span></span><img src="https://drive.google.com/thumbnail?id=1tMRcUFHQDE2YZKw9o-YgIOGVKbwIkGXE&sz=w640" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">Drive</span></span><span class="info"><span class="step">Drill 01</span><span class="info-title">グリップ【後編】</span><span class="sub">Googleドライブで開く ↗</span></span></a><a class="card" href="https://drive.google.com/file/d/1XngY86T-6IYDL8P91_eMU155UWryeS7i/view" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="drill"><span class="tile-sec">Drills</span><span class="tile-num">02</span><span class="tile-title">正しい前傾の作り方</span></span><img src="https://drive.google.com/thumbnail?id=1XngY86T-6IYDL8P91_eMU155UWryeS7i&sz=w640" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">Drive</span></span><span class="info"><span class="step">Drill 02</span><span class="info-title">正しい前傾の作り方</span><span class="sub">Googleドライブで開く ↗</span></span></a><a class="card" href="https://drive.google.com/file/d/1mFd_1XaU19vwJ-4ntMxFD025JE21Ty7w/view" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="drill"><span class="tile-sec">Drills</span><span class="tile-num">03</span><span class="tile-title">肩甲骨をハメる</span></span><img src="https://drive.google.com/thumbnail?id=1mFd_1XaU19vwJ-4ntMxFD025JE21Ty7w&sz=w640" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">Drive</span></span><span class="info"><span class="step">Drill 03</span><span class="info-title">肩甲骨をハメる</span><span class="sub">Googleドライブで開く ↗</span></span></a><a class="card" href="https://drive.google.com/file/d/12cwyoUYVIYn8ngafNO4Te9miCPzoS1wn/view" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="drill"><span class="tile-sec">Drills</span><span class="tile-num">04</span><span class="tile-title">フェースの向き</span></span><img src="https://drive.google.com/thumbnail?id=12cwyoUYVIYn8ngafNO4Te9miCPzoS1wn&sz=w640" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">Drive</span></span><span class="info"><span class="step">Drill 04</span><span class="info-title">フェースの向き</span><span class="sub">Googleドライブで開く ↗</span></span></a><a class="card" href="https://drive.google.com/file/d/1J_t7Ar5cwpxUGSjTBy3bUoiWz0UT_7H7/view" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="drill"><span class="tile-sec">Drills</span><span class="tile-num">05</span><span class="tile-title">両足のデザイン</span></span><img src="https://drive.google.com/thumbnail?id=1J_t7Ar5cwpxUGSjTBy3bUoiWz0UT_7H7&sz=w640" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">Drive</span></span><span class="info"><span class="step">Drill 05</span><span class="info-title">両足のデザイン</span><span class="sub">Googleドライブで開く ↗</span></span></a><a class="card" href="https://drive.google.com/file/d/157OijUxZnZDaz4PlFO3nscMWXl3ihbei/view" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="drill"><span class="tile-sec">Drills</span><span class="tile-num">06</span><span class="tile-title">腰の位置</span></span><img src="https://drive.google.com/thumbnail?id=157OijUxZnZDaz4PlFO3nscMWXl3ihbei&sz=w640" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">Drive</span></span><span class="info"><span class="step">Drill 06</span><span class="info-title">腰の位置</span><span class="sub">Googleドライブで開く ↗</span></span></a><a class="card" href="https://drive.google.com/file/d/1OcCEU7TBY4bXtBTQAfj0GJd_f9WORNng/view" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="drill"><span class="tile-sec">Drills</span><span class="tile-num">07</span><span class="tile-title">膝の向き</span></span><img src="https://drive.google.com/thumbnail?id=1OcCEU7TBY4bXtBTQAfj0GJd_f9WORNng&sz=w640" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">Drive</span></span><span class="info"><span class="step">Drill 07</span><span class="info-title">膝の向き</span><span class="sub">Googleドライブで開く ↗</span></span></a><a class="card" href="https://drive.google.com/file/d/1hiXCnL0GIXR7XuF0Sr9cKx0dRxJSGObY/view" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="drill"><span class="tile-sec">Drills</span><span class="tile-num">08</span><span class="tile-title">振り子キャッチ</span></span><img src="https://drive.google.com/thumbnail?id=1hiXCnL0GIXR7XuF0Sr9cKx0dRxJSGObY&sz=w640" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">Drive</span></span><span class="info"><span class="step">Drill 08</span><span class="info-title">振り子キャッチ</span><span class="sub">Googleドライブで開く ↗</span></span></a><a class="card" href="https://drive.google.com/file/d/1zMpREltkYaLK3WxHg30WHtT6rbujIPhq/view" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="drill"><span class="tile-sec">Drills</span><span class="tile-num">09</span><span class="tile-title">一回転ドリル</span></span><img src="https://drive.google.com/thumbnail?id=1zMpREltkYaLK3WxHg30WHtT6rbujIPhq&sz=w640" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">Drive</span></span><span class="info"><span class="step">Drill 09</span><span class="info-title">一回転ドリル</span><span class="sub">Googleドライブで開く ↗</span></span></a><a class="card" href="https://drive.google.com/file/d/1fZHOhyJMvbrTfSYAutQvkzwDA46mqL_H/view" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="drill"><span class="tile-sec">Drills</span><span class="tile-num">10</span><span class="tile-title">つまむ連続素振り</span></span><img src="https://drive.google.com/thumbnail?id=1fZHOhyJMvbrTfSYAutQvkzwDA46mqL_H&sz=w640" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">Drive</span></span><span class="info"><span class="step">Drill 10</span><span class="info-title">つまむ連続素振り</span><span class="sub">Googleドライブで開く ↗</span></span></a><a class="card" href="https://drive.google.com/file/d/1HX6rA5KbbOIIUuMfTDw4D80xfV6GvisT/view" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="drill"><span class="tile-sec">Drills</span><span class="tile-num">11</span><span class="tile-title">一回転叩きドリル</span></span><img src="https://drive.google.com/thumbnail?id=1HX6rA5KbbOIIUuMfTDw4D80xfV6GvisT&sz=w640" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">Drive</span></span><span class="info"><span class="step">Drill 11</span><span class="info-title">一回転叩きドリル</span><span class="sub">Googleドライブで開く ↗</span></span></a><a class="card" href="https://drive.google.com/file/d/1j21RJNhzAyI--6wWfnuZWhiZcJwrkCVc/view" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="drill"><span class="tile-sec">Drills</span><span class="tile-num">12</span><span class="tile-title">テコの原理ドリル</span></span><img src="https://drive.google.com/thumbnail?id=1j21RJNhzAyI--6wWfnuZWhiZcJwrkCVc&sz=w640" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">Drive</span></span><span class="info"><span class="step">Drill 12</span><span class="info-title">テコの原理ドリル</span><span class="sub">Googleドライブで開く ↗</span></span></a><a class="card" href="https://drive.google.com/file/d/1RhuJO8MgO36i6d_ukQS0vTD_ZfC_oAGa/view" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="drill"><span class="tile-sec">Drills</span><span class="tile-num">13</span><span class="tile-title">大の字練習</span></span><img src="https://drive.google.com/thumbnail?id=1RhuJO8MgO36i6d_ukQS0vTD_ZfC_oAGa&sz=w640" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">Drive</span></span><span class="info"><span class="step">Drill 13</span><span class="info-title">大の字練習</span><span class="sub">Googleドライブで開く ↗</span></span></a><a class="card" href="https://drive.google.com/file/d/1JIamnAmLnwo0m8KmZwQo3eAKaDfECNe7/view" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="drill"><span class="tile-sec">Drills</span><span class="tile-num">14</span><span class="tile-title">右手を叩くドリル</span></span><img src="https://drive.google.com/thumbnail?id=1JIamnAmLnwo0m8KmZwQo3eAKaDfECNe7&sz=w640" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">Drive</span></span><span class="info"><span class="step">Drill 14</span><span class="info-title">右手を叩くドリル</span><span class="sub">Googleドライブで開く ↗</span></span></a><a class="card" href="https://drive.google.com/file/d/1um0O8oTKPQ_hAy10ItfigynS3b_0iNY2/view" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="drill"><span class="tile-sec">Drills</span><span class="tile-num">15</span><span class="tile-title">左手一本練習</span></span><img src="https://drive.google.com/thumbnail?id=1um0O8oTKPQ_hAy10ItfigynS3b_0iNY2&sz=w640" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">Drive</span></span><span class="info"><span class="step">Drill 15</span><span class="info-title">左手一本練習</span><span class="sub">Googleドライブで開く ↗</span></span></a><a class="card" href="https://drive.google.com/file/d/1YT9WhGEinKYS3EyVRA4SQtPr6DgTQIok/view" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="drill"><span class="tile-sec">Drills</span><span class="tile-num">16</span><span class="tile-title">歌舞伎ドリル</span></span><img src="https://drive.google.com/thumbnail?id=1YT9WhGEinKYS3EyVRA4SQtPr6DgTQIok&sz=w640" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">Drive</span></span><span class="info"><span class="step">Drill 16</span><span class="info-title">歌舞伎ドリル</span><span class="sub">Googleドライブで開く ↗</span></span></a><a class="card" href="https://drive.google.com/file/d/19V1NIh4EzTXffYyNkz2kO8zMewLnUUgV/view" target="_blank" rel="noopener noreferrer"><span class="thumb"><span class="tile" data-sec="drill"><span class="tile-sec">Drills</span><span class="tile-num">17</span><span class="tile-title">連続素振り</span></span><img src="https://drive.google.com/thumbnail?id=19V1NIh4EzTXffYyNkz2kO8zMewLnUUgV&sz=w640" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb><span class="play" aria-hidden="true"><i></i></span><span class="badge">Drive</span></span><span class="info"><span class="step">Drill 17</span><span class="info-title">連続素振り</span><span class="sub">Googleドライブで開く ↗</span></span></a></div></section></main>
   <footer><span class="eyebrow">Re:Swing Golf Lesson</span><span>構え方編 → スイング編 → ドリル集 の順に見るのがおすすめです。</span></footer>
 </div>
 <button class="to-top" id="to-top" type="button" aria-label="いちばん上へ" hidden>↑</button>
 
-<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="now-title">
-  <div class="panel">
-    <button class="close" id="close" type="button" aria-label="閉じる">×</button>
-    <div class="now">
-      <div class="stage" id="stage"></div>
-      <span class="step" id="now-step"></span>
-      <h2 id="now-title"></h2>
-      <div class="now-meta" id="now-meta"></div>
-      <div class="actions">
-        <button class="btn" id="prev" type="button">← 前の動画</button>
-        <button class="btn primary" id="next" type="button">次の動画 →</button>
-        <a class="btn" id="ext" href="#" target="_blank" rel="noopener">別タブで開く ↗</a>
-      </div>
-    </div>
-    <aside class="upnext">
-      <h3><span class="eyebrow">Playlist</span><b id="upnext-title">このコースの動画</b></h3>
-      <ol id="upnext"></ol>
-    </aside>
-  </div>
-</div>
-
 <script>
-const SECTIONS = [
-  { key: 'kamae', name: '構え方編', en: 'Course I — Address', desc: 'アドレス、グリップ、前傾。ボールに当たる構えをつくる基礎の7本。' },
-  { key: 'swing', name: 'スイング編', en: 'Course II — Swing', desc: 'クラブの扱い方からフォロー、フィニッシュまで。スイングの流れを順に9本。' },
-  { key: 'drill', name: 'ドリル集', en: 'Course III — Drills', desc: 'レッスンで学んだ動きを、自主練で体に覚えさせるための18本。' },
-];
-const yt = (sec, step, title, id) => ({ sec, step, title, src: 'yt', id });
-const gd = (sec, step, title, id) => ({ sec, step, title, src: 'gd', id });
-const VIDEOS = [
-  yt('kamae', 1, '当たる正しいアドレス', 'vf-HaatPbw4'),
-  yt('kamae', 2, '正しい握り方【前編】', 'ol44-t-FkXQ'),
-  yt('kamae', 3, '正しい握り方【後編】', 'ZqpIKE7fkqQ'),
-  yt('kamae', 4, '正しい前傾の仕方', '7cn3cTPYoqY'),
-  yt('kamae', 5, '肩甲骨をハメる', 'xzWok5Efq54'),
-  yt('kamae', 6, 'フェース面の向け方', 'prQ0Kb_ogNs'),
-  yt('kamae', 7, '細かいチェックポイント', 'dvPqGWbsE4o'),
-  yt('swing', 8, '正しいクラブの扱い方', 'P4mLVNtD7T8'),
-  yt('swing', 9, 'クラブを邪魔しない超基本', 'OWwzlvDoDEc'),
-  yt('swing', 10, '狙った場所に飛ばすコントロール', 'OcWtRsC2HL8'),
-  yt('swing', 11, 'ボールの当て方の基本', 'tuwsJRglkjo'),
-  yt('swing', 12, 'クラブを邪魔しないバックスイングのやり方', '1Y97llf3J00'),
-  yt('swing', 13, '最大円弧', '8JTTJMkjI7c'),
-  yt('swing', 14, '加速装置としての右手の役割', 'Ob_E8zNECOU'),
-  yt('swing', 15, '正しいフォローフィニッシュの作り方', 'yhJHUW5BQbM'),
-  yt('swing', 16, '最後の砦 連続素振り', 'SvaQj07ddQM'),
-  gd('drill', 1, 'グリップ【前編】', '1Sa1AL-o50Dk8AgMb8--m222OK_B-Vp7z'),
-  gd('drill', 1, 'グリップ【後編】', '1tMRcUFHQDE2YZKw9o-YgIOGVKbwIkGXE'),
-  gd('drill', 2, '正しい前傾の作り方', '1XngY86T-6IYDL8P91_eMU155UWryeS7i'),
-  gd('drill', 3, '肩甲骨をハメる', '1mFd_1XaU19vwJ-4ntMxFD025JE21Ty7w'),
-  gd('drill', 4, 'フェースの向き', '12cwyoUYVIYn8ngafNO4Te9miCPzoS1wn'),
-  gd('drill', 5, '両足のデザイン', '1J_t7Ar5cwpxUGSjTBy3bUoiWz0UT_7H7'),
-  gd('drill', 6, '腰の位置', '157OijUxZnZDaz4PlFO3nscMWXl3ihbei'),
-  gd('drill', 7, '膝の向き', '1OcCEU7TBY4bXtBTQAfj0GJd_f9WORNng'),
-  gd('drill', 8, '振り子キャッチ', '1hiXCnL0GIXR7XuF0Sr9cKx0dRxJSGObY'),
-  gd('drill', 9, '一回転ドリル', '1zMpREltkYaLK3WxHg30WHtT6rbujIPhq'),
-  gd('drill', 10, 'つまむ連続素振り', '1fZHOhyJMvbrTfSYAutQvkzwDA46mqL_H'),
-  gd('drill', 11, '一回転叩きドリル', '1HX6rA5KbbOIIUuMfTDw4D80xfV6GvisT'),
-  gd('drill', 12, 'テコの原理ドリル', '1j21RJNhzAyI--6wWfnuZWhiZcJwrkCVc'),
-  gd('drill', 13, '大の字練習', '1RhuJO8MgO36i6d_ukQS0vTD_ZfC_oAGa'),
-  gd('drill', 14, '右手を叩くドリル', '1JIamnAmLnwo0m8KmZwQo3eAKaDfECNe7'),
-  gd('drill', 15, '左手一本練習', '1um0O8oTKPQ_hAy10ItfigynS3b_0iNY2'),
-  gd('drill', 16, '歌舞伎ドリル', '1YT9WhGEinKYS3EyVRA4SQtPr6DgTQIok'),
-  gd('drill', 17, '連続素振り', '19V1NIh4EzTXffYyNkz2kO8zMewLnUUgV'),
-].map((v, i) => ({ ...v, idx: i, key: v.src + ':' + v.id }));
+(function () {
+  'use strict';
+  var SECTIONS = [
+    { key: 'kamae', name: '構え方編', en: 'Course I — Address', tag: 'Address', desc: 'アドレス、グリップ、前傾。ボールに当たる構えをつくる基礎の7本。' },
+    { key: 'swing', name: 'スイング編', en: 'Course II — Swing', tag: 'Swing', desc: 'クラブの扱い方からフォロー、フィニッシュまで。スイングの流れを順に9本。' },
+    { key: 'drill', name: 'ドリル集', en: 'Course III — Drills', tag: 'Drills', desc: 'レッスンで学んだ動きを、自主練で体に覚えさせるための18本。' }
+  ];
+  // [コース, 番号, タイトル, 'yt' | 'gd', ID]
+  var RAW = [
+    ['kamae', 1, '当たる正しいアドレス', 'yt', 'vf-HaatPbw4'],
+    ['kamae', 2, '正しい握り方【前編】', 'yt', 'ol44-t-FkXQ'],
+    ['kamae', 3, '正しい握り方【後編】', 'yt', 'ZqpIKE7fkqQ'],
+    ['kamae', 4, '正しい前傾の仕方', 'yt', '7cn3cTPYoqY'],
+    ['kamae', 5, '肩甲骨をハメる', 'yt', 'xzWok5Efq54'],
+    ['kamae', 6, 'フェース面の向け方', 'yt', 'prQ0Kb_ogNs'],
+    ['kamae', 7, '細かいチェックポイント', 'yt', 'dvPqGWbsE4o'],
+    ['swing', 8, '正しいクラブの扱い方', 'yt', 'P4mLVNtD7T8'],
+    ['swing', 9, 'クラブを邪魔しない超基本', 'yt', 'OWwzlvDoDEc'],
+    ['swing', 10, '狙った場所に飛ばすコントロール', 'yt', 'OcWtRsC2HL8'],
+    ['swing', 11, 'ボールの当て方の基本', 'yt', 'tuwsJRglkjo'],
+    ['swing', 12, 'クラブを邪魔しないバックスイングのやり方', 'yt', '1Y97llf3J00'],
+    ['swing', 13, '最大円弧', 'yt', '8JTTJMkjI7c'],
+    ['swing', 14, '加速装置としての右手の役割', 'yt', 'Ob_E8zNECOU'],
+    ['swing', 15, '正しいフォローフィニッシュの作り方', 'yt', 'yhJHUW5BQbM'],
+    ['swing', 16, '最後の砦 連続素振り', 'yt', 'SvaQj07ddQM'],
+    ['drill', 1, 'グリップ【前編】', 'gd', '1Sa1AL-o50Dk8AgMb8--m222OK_B-Vp7z'],
+    ['drill', 1, 'グリップ【後編】', 'gd', '1tMRcUFHQDE2YZKw9o-YgIOGVKbwIkGXE'],
+    ['drill', 2, '正しい前傾の作り方', 'gd', '1XngY86T-6IYDL8P91_eMU155UWryeS7i'],
+    ['drill', 3, '肩甲骨をハメる', 'gd', '1mFd_1XaU19vwJ-4ntMxFD025JE21Ty7w'],
+    ['drill', 4, 'フェースの向き', 'gd', '12cwyoUYVIYn8ngafNO4Te9miCPzoS1wn'],
+    ['drill', 5, '両足のデザイン', 'gd', '1J_t7Ar5cwpxUGSjTBy3bUoiWz0UT_7H7'],
+    ['drill', 6, '腰の位置', 'gd', '157OijUxZnZDaz4PlFO3nscMWXl3ihbei'],
+    ['drill', 7, '膝の向き', 'gd', '1OcCEU7TBY4bXtBTQAfj0GJd_f9WORNng'],
+    ['drill', 8, '振り子キャッチ', 'gd', '1hiXCnL0GIXR7XuF0Sr9cKx0dRxJSGObY'],
+    ['drill', 9, '一回転ドリル', 'gd', '1zMpREltkYaLK3WxHg30WHtT6rbujIPhq'],
+    ['drill', 10, 'つまむ連続素振り', 'gd', '1fZHOhyJMvbrTfSYAutQvkzwDA46mqL_H'],
+    ['drill', 11, '一回転叩きドリル', 'gd', '1HX6rA5KbbOIIUuMfTDw4D80xfV6GvisT'],
+    ['drill', 12, 'テコの原理ドリル', 'gd', '1j21RJNhzAyI--6wWfnuZWhiZcJwrkCVc'],
+    ['drill', 13, '大の字練習', 'gd', '1RhuJO8MgO36i6d_ukQS0vTD_ZfC_oAGa'],
+    ['drill', 14, '右手を叩くドリル', 'gd', '1JIamnAmLnwo0m8KmZwQo3eAKaDfECNe7'],
+    ['drill', 15, '左手一本練習', 'gd', '1um0O8oTKPQ_hAy10ItfigynS3b_0iNY2'],
+    ['drill', 16, '歌舞伎ドリル', 'gd', '1YT9WhGEinKYS3EyVRA4SQtPr6DgTQIok'],
+    ['drill', 17, '連続素振り', 'gd', '19V1NIh4EzTXffYyNkz2kO8zMewLnUUgV']
+  ];
+  var THUMBS = {};
 
-const THUMBS = {}; /*THUMBS*/
-const secOf = k => SECTIONS.find(s => s.key === k);
-const thumbUrl = v => THUMBS[v.id] || (v.src === 'yt' ? `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg` : `https://drive.google.com/thumbnail?id=${v.id}&sz=w640`);
-const watchUrl = v => v.src === 'yt' ? `https://www.youtube.com/watch?v=${v.id}` : `https://drive.google.com/file/d/${v.id}/view`;
-const embedUrl = v => v.src === 'yt' ? `https://www.youtube-nocookie.com/embed/${v.id}?autoplay=1&rel=0&playsinline=1` : `https://drive.google.com/file/d/${v.id}/preview`;
-const srcLabel = v => v.src === 'yt' ? 'YouTube' : 'Drive';
-const srcLabelJa = v => v.src === 'yt' ? 'YouTube' : 'Googleドライブ';
-const pad = n => String(n).padStart(2, '0');
-const stepLabel = v => v.sec === 'drill' ? `Drill ${pad(v.step)}` : `Lesson ${pad(v.step)}`;
-const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const norm = s => s.normalize('NFKC').toLowerCase().replace(/[\s【】・]/g, '');
-const $ = id => document.getElementById(id);
-
-// 外部の画像が読み込めた環境 (このページを自分で公開した場合) なら、動画もページ内で再生する
-let canEmbed = false;
-
-const load = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } };
-const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
-const narrow = matchMedia('(max-width: 600px)');
-let view = load('reswing-view', 'grid') === 'list' ? 'list' : 'grid';
-const viewNow = () => narrow.matches ? 'list' : view; // スマホは見渡しやすいリスト表示
-let query = '';
-
-function tileHTML(v) {
-  return `<div class="tile" data-sec="${v.sec}">
-    <div class="tile-sec">${esc(secOf(v.sec).en.split(' — ')[1])}</div>
-    <div class="tile-mid"><div class="tile-num">${pad(v.step)}</div></div>
-    <div class="tile-title">${esc(v.title)}</div>
-  </div>`;
-}
-function thumbInner(v) {
-  return `${tileHTML(v)}
-    <img src="${thumbUrl(v)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-thumb>
-    <span class="play" aria-hidden="true"><i></i></span>
-    <span class="badge">${srcLabel(v)}</span>`;
-}
-// 動画へのリンク。タップするとそのまま YouTube / ドライブが開く
-const goAttrs = v => `href="${watchUrl(v)}" target="_blank" rel="noopener" data-go="${v.idx}"`;
-
-function wireThumbs(root) {
-  root.querySelectorAll('img[data-thumb]').forEach(img => {
-    const box = img.parentElement;
-    const bad = () => img.remove();
-    const ok = () => {
-      if (img.naturalWidth < 120) return bad(); // Drive の非公開ファイルは小さなアイコンが返る
-      box.classList.add('has-img');
-      if (!img.src.startsWith('data:')) canEmbed = true;
-    };
-    if (img.complete && img.naturalWidth) ok();
-    else { img.addEventListener('load', ok, { once: true }); img.addEventListener('error', bad, { once: true }); }
+  var VIDEOS = RAW.map(function (r, i) {
+    return { sec: r[0], step: r[1], title: r[2], src: r[3], id: r[4], idx: i };
   });
-}
+  var SEC = {};
+  SECTIONS.forEach(function (s) { SEC[s.key] = s; });
 
-const matches = v => !query || norm(v.title + secOf(v.sec).name + stepLabel(v) + srcLabelJa(v)).includes(norm(query));
-
-function renderChips() {
-  $('chips').innerHTML = SECTIONS.map(s => {
-    const n = VIDEOS.filter(v => v.sec === s.key && matches(v)).length;
-    return `<a class="chip" href="#${s.key}" data-jump="${s.key}" aria-current="false">${esc(s.name)}<span>${n}</span></a>`;
-  }).join('');
-  updateActiveChip();
-}
-function cardHTML(v) {
-  return `<a class="card" ${goAttrs(v)}>
-    <span class="thumb">${thumbInner(v)}</span>
-    <span class="info">
-      <span class="step">${stepLabel(v)}</span>
-      <span class="info-title">${esc(v.title)}</span>
-      <span class="sub">${srcLabelJa(v)}で開く ↗</span>
-    </span>
-  </a>`;
-}
-function renderMain() {
-  let html = '';
-  for (const s of SECTIONS) {
-    const all = VIDEOS.filter(v => v.sec === s.key);
-    const list = all.filter(matches);
-    if (!list.length) continue;
-    html += `<section class="sec" id="${s.key}">
-      <div class="sec-head"><span class="eyebrow">${esc(s.en)}</span><h2>${esc(s.name)}</h2><span class="count">${query ? `${list.length}件ヒット` : `全${all.length}本`}</span><p>${esc(s.desc)}</p></div>
-      <div class="grid${viewNow() === 'list' ? ' list' : ''}">${list.map(cardHTML).join('')}</div>
-    </section>`;
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
   }
-  $('main').innerHTML = html || `<div class="empty">「${esc(query)}」に一致する動画はありません。<br><button class="btn" type="button" data-reset>検索をクリア</button></div>`;
-  wireThumbs($('main'));
-  observeSections();
-}
-function renderTools() {
-  $('view-grid').setAttribute('aria-pressed', view === 'grid');
-  $('view-list').setAttribute('aria-pressed', view === 'list');
-}
-function renderAll() { renderChips(); renderMain(); renderTools(); }
-narrow.addEventListener?.('change', renderMain);
-
-// ---- 移動 ----
-function jumpTo(key, smooth = true) {
-  const el = key === 'top' ? $('top') : $(key);
-  if (!el) return;
-  el.scrollIntoView({ behavior: smooth && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto', block: 'start' });
-  history.replaceState(null, '', key === 'top' ? location.pathname + location.search : '#' + key);
-}
-let activeSec = null, io = null;
-function updateActiveChip() {
-  document.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-current', c.dataset.jump === activeSec ? 'true' : 'false'));
-}
-function observeSections() {
-  io?.disconnect();
-  io = new IntersectionObserver(entries => {
-    const vis = [...document.querySelectorAll('.sec')].filter(s => { const r = s.getBoundingClientRect(); return r.top < innerHeight * 0.45 && r.bottom > 140; });
-    activeSec = vis.length ? vis[vis.length - 1].id : null;
-    updateActiveChip();
-  }, { threshold: [0, .25, .5, .75, 1] });
-  document.querySelectorAll('.sec').forEach(s => io.observe(s));
-}
-addEventListener('scroll', () => { $('to-top').hidden = scrollY < 700; }, { passive: true });
-$('to-top').addEventListener('click', () => jumpTo('top'));
-
-// ---- 操作 ----
-document.addEventListener('click', e => {
-  const go = e.target.closest('[data-go]');
-  if (go) {
-    const v = VIDEOS[+go.dataset.go];
-    if (canEmbed) { e.preventDefault(); openPlayer(v.idx); }
-    return;
+  function watchUrl(v) {
+    return v.src === 'yt' ? 'https://www.youtube.com/watch?v=' + v.id : 'https://drive.google.com/file/d/' + v.id + '/view';
   }
-  const j = e.target.closest('[data-jump]');
-  if (j) { e.preventDefault(); return jumpTo(j.dataset.jump); }
-  if (e.target.closest('[data-reset]')) { query = ''; $('q').value = ''; $('clear').hidden = true; renderChips(); renderMain(); }
-});
-$('view-grid').addEventListener('click', () => { view = 'grid'; save('reswing-view', view); renderMain(); renderTools(); });
-$('view-list').addEventListener('click', () => { view = 'list'; save('reswing-view', view); renderMain(); renderTools(); });
-const q = $('q'), clearBtn = $('clear');
-q.addEventListener('input', () => { query = q.value.trim(); clearBtn.hidden = !q.value; renderChips(); renderMain(); });
-q.addEventListener('keydown', e => { if (e.key === 'Enter') { q.blur(); const first = document.querySelector('.sec'); first && jumpTo(first.id); } });
-clearBtn.addEventListener('click', () => { q.value = ''; query = ''; clearBtn.hidden = true; renderChips(); renderMain(); q.focus(); });
+  function thumbUrl(v) {
+    if (THUMBS[v.id]) return THUMBS[v.id];
+    return v.src === 'yt' ? 'https://i.ytimg.com/vi/' + v.id + '/hqdefault.jpg' : 'https://drive.google.com/thumbnail?id=' + v.id + '&sz=w640';
+  }
+  function srcLabel(v) { return v.src === 'yt' ? 'YouTube' : 'Drive'; }
+  function srcLabelJa(v) { return v.src === 'yt' ? 'YouTube' : 'Googleドライブ'; }
+  function stepLabel(v) { return (v.sec === 'drill' ? 'Drill ' : 'Lesson ') + pad(v.step); }
 
-// ---- ページ内プレーヤー (埋め込みが使える環境だけ) ----
-const sheet = $('sheet');
-let current = -1, lastFocus = null;
-function openPlayer(i) {
-  if (current < 0) lastFocus = document.activeElement;
-  current = i;
-  const v = VIDEOS[i], s = secOf(v.sec);
-  $('stage').innerHTML = `<iframe src="${embedUrl(v)}" title="${esc(v.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
-  $('now-step').textContent = stepLabel(v);
-  $('now-title').textContent = v.title;
-  $('now-meta').innerHTML = `<span>${esc(s.name)}</span><span>・</span><span>${srcLabelJa(v)}</span>`;
-  $('ext').href = watchUrl(v);
-  $('prev').disabled = i === 0;
-  $('next').disabled = i === VIDEOS.length - 1;
-  $('upnext-title').textContent = `${s.name}　全${VIDEOS.filter(x => x.sec === v.sec).length}本`;
-  const ol = $('upnext');
-  ol.innerHTML = VIDEOS.filter(x => x.sec === v.sec).map(x => `<li><button class="un" type="button" data-open="${x.idx}" ${x.idx === i ? 'aria-current="true"' : ''}>
-      <span class="thumb">${thumbInner(x)}</span>
-      <span><span class="un-t">${esc(x.title)}</span><span class="un-s">${stepLabel(x)}</span></span>
-    </button></li>`).join('');
-  wireThumbs(ol);
-  sheet.hidden = false;
-  document.body.style.overflow = 'hidden';
-  ol.querySelector('[aria-current]')?.scrollIntoView({ block: 'nearest' });
-  $('close').focus({ preventScroll: true });
-}
-function closePlayer() {
-  sheet.hidden = true; current = -1;
-  $('stage').innerHTML = '';
-  document.body.style.overflow = '';
-  lastFocus?.focus?.({ preventScroll: true });
-}
-sheet.addEventListener('click', e => {
-  const o = e.target.closest('[data-open]');
-  if (o) return openPlayer(+o.dataset.open);
-  if (e.target === sheet) closePlayer();
-});
-$('close').addEventListener('click', closePlayer);
-$('prev').addEventListener('click', () => current > 0 && openPlayer(current - 1));
-$('next').addEventListener('click', () => current < VIDEOS.length - 1 && openPlayer(current + 1));
-document.addEventListener('keydown', e => {
-  if (sheet.hidden) { if (e.key === '/' && document.activeElement !== q) { e.preventDefault(); q.focus(); } return; }
-  if (e.key === 'Escape') closePlayer();
-});
+  // 検索用の正規化: 全角半角・大小文字・ひらがな/カタカナ・記号の違いを吸収する
+  function norm(s) {
+    s = String(s);
+    if (s.normalize) s = s.normalize('NFKC');
+    return s.toLowerCase()
+      .replace(/[ァ-ヶ]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0x60); })
+      .replace(/[\s　【】「」（）()・,、。.!！?？ー〜~-]/g, '');
+  }
+  // 言い方の違いでも見つかるように (例: 「グリップ」で「握り方」も出る)
+  var ALIASES = [['握り', 'グリップ'], ['グリップ', '握り方'], ['フェース', 'フェイス'], ['素振り', 'スイング練習'], ['アドレス', '構え'], ['前傾', '姿勢']];
+  VIDEOS.forEach(function (v) {
+    var extra = ALIASES.filter(function (a) { return v.title.indexOf(a[0]) !== -1; }).map(function (a) { return a[1]; }).join('');
+    v.haystack = norm(v.title + extra + SEC[v.sec].name + stepLabel(v) + 'step' + v.step + srcLabelJa(v));
+  });
 
-renderAll();
-const startHash = location.hash.slice(1);
-if (SECTIONS.some(s => s.key === startHash)) requestAnimationFrame(() => jumpTo(startHash, false));
+  // ---- 描画 (文字列を作るだけの関数。公開前に HTML へ書き出すのにも使う) ----
+  function cardHTML(v) {
+    return '<a class="card" href="' + watchUrl(v) + '" target="_blank" rel="noopener noreferrer">' +
+      '<span class="thumb">' +
+        '<span class="tile" data-sec="' + v.sec + '">' +
+          '<span class="tile-sec">' + esc(SEC[v.sec].tag) + '</span>' +
+          '<span class="tile-num">' + pad(v.step) + '</span>' +
+          '<span class="tile-title">' + esc(v.title) + '</span>' +
+        '</span>' +
+        '<img src="' + thumbUrl(v) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb>' +
+        '<span class="play" aria-hidden="true"><i></i></span>' +
+        '<span class="badge">' + srcLabel(v) + '</span>' +
+      '</span>' +
+      '<span class="info">' +
+        '<span class="step">' + stepLabel(v) + '</span>' +
+        '<span class="info-title">' + esc(v.title) + '</span>' +
+        '<span class="sub">' + srcLabelJa(v) + 'で開く ↗</span>' +
+      '</span>' +
+    '</a>';
+  }
+  function chipsHTML(list) {
+    return SECTIONS.map(function (s) {
+      var n = list.filter(function (v) { return v.sec === s.key; }).length;
+      return '<a class="chip' + (n ? '' : ' is-empty') + '" href="#' + s.key + '" data-jump="' + s.key + '">' + esc(s.name) + '<span>' + n + '</span></a>';
+    }).join('');
+  }
+  function mainHTML(list, query, isList) {
+    var html = '';
+    SECTIONS.forEach(function (s) {
+      var items = list.filter(function (v) { return v.sec === s.key; });
+      if (!items.length) return;
+      var total = VIDEOS.filter(function (v) { return v.sec === s.key; }).length;
+      html += '<section class="sec" id="' + s.key + '">' +
+        '<div class="sec-head"><span class="eyebrow">' + esc(s.en) + '</span><h2>' + esc(s.name) + '</h2>' +
+        '<span class="count">' + (query ? items.length + '件ヒット' : '全' + total + '本') + '</span><p>' + esc(s.desc) + '</p></div>' +
+        '<div class="grid' + (isList ? ' list' : '') + '">' + items.map(cardHTML).join('') + '</div>' +
+      '</section>';
+    });
+    if (!html) {
+      html = '<div class="empty">「' + esc(query) + '」に一致する動画はありません。<br>' +
+        '<button class="btn" type="button" data-reset>検索をクリア</button></div>';
+    }
+    return html;
+  }
+  // 公開前の書き出し用
+  window.__reswingPrerender = function () {
+    return { main: mainHTML(VIDEOS, '', false), chips: chipsHTML(VIDEOS), count: VIDEOS.length };
+  };
+
+  // ---- ここから先は画面の操作。失敗しても書き出し済みの一覧はそのまま使える ----
+  function start() {
+    var $ = function (id) { return document.getElementById(id); };
+    var main = $('main'), chips = $('chips'), q = $('q'), clearBtn = $('clear');
+    if (!main || !chips || !q) return;
+
+    function load(k, d) { try { var v = window.localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }
+    function save(k, v) { try { window.localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* 保存できなくても動作は続ける */ } }
+
+    var mq = window.matchMedia ? window.matchMedia('(max-width: 600px)') : null;
+    var view = load('reswing-view', 'grid') === 'list' ? 'list' : 'grid';
+    var query = '';
+    function isList() { return (mq && mq.matches) || view === 'list'; }
+
+    function wireThumbs(root) {
+      var imgs = root.querySelectorAll('img[data-thumb]');
+      Array.prototype.forEach.call(imgs, function (img) {
+        var box = img.parentNode;
+        function bad() { if (img.parentNode) img.parentNode.removeChild(img); }
+        function ok() { if (img.naturalWidth < 120) return bad(); box.className += ' has-img'; }
+        if (img.complete) { img.naturalWidth ? ok() : bad(); }
+        else { img.addEventListener('load', ok); img.addEventListener('error', bad); }
+      });
+    }
+
+    var activeSec = null;
+    function updateActive() {
+      var secs = main.querySelectorAll('.sec'), cur = null, limit = window.innerHeight * 0.45;
+      for (var i = 0; i < secs.length; i++) {
+        var r = secs[i].getBoundingClientRect();
+        if (r.top < limit && r.bottom > 140) cur = secs[i].id;
+      }
+      if (cur === activeSec) return;
+      activeSec = cur;
+      Array.prototype.forEach.call(chips.querySelectorAll('.chip'), function (c) {
+        c.setAttribute('aria-current', c.getAttribute('data-jump') === cur ? 'true' : 'false');
+      });
+    }
+
+    function render() {
+      var list = query ? VIDEOS.filter(function (v) { return v.haystack.indexOf(norm(query)) !== -1; }) : VIDEOS;
+      main.innerHTML = mainHTML(list, query, isList());
+      chips.innerHTML = chipsHTML(list);
+      activeSec = undefined;
+      wireThumbs(main);
+      updateActive();
+      var g = $('view-grid'), l = $('view-list');
+      if (g && l) { g.setAttribute('aria-pressed', String(view === 'grid')); l.setAttribute('aria-pressed', String(view === 'list')); }
+    }
+
+    function jumpTo(key) {
+      var el = key === 'top' ? $('top') : $(key);
+      if (!el) return;
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      // 上に固定されたバーの高さは画面幅で変わるので、実際の高さを測ってその下に合わせる
+      var bar = document.querySelector('.top');
+      var offset = key === 'top' ? 0 : (bar ? bar.offsetHeight : 0) + 12;
+      var y = key === 'top' ? 0 : Math.max(0, el.getBoundingClientRect().top + window.pageYOffset - offset);
+      try { window.scrollTo({ top: y, behavior: reduce ? 'auto' : 'smooth' }); } catch (e) { window.scrollTo(0, y); }
+      try { history.replaceState(null, '', key === 'top' ? location.pathname + location.search : '#' + key); } catch (e) { /* 履歴を書き換えられない環境でも移動はできる */ }
+    }
+
+    document.addEventListener('click', function (e) {
+      var t = e.target;
+      var j = t.closest ? t.closest('[data-jump]') : null;
+      if (j) { e.preventDefault(); jumpTo(j.getAttribute('data-jump')); return; }
+      if (t.closest && t.closest('[data-reset]')) { q.value = ''; query = ''; clearBtn.hidden = true; render(); }
+    });
+
+    // 入力のたびに描き直すと日本語の変換中にちらつくので、変換が確定してから・1フレームにまとめて描く
+    var composing = false, pending = 0;
+    function schedule() {
+      if (pending) return;
+      pending = (window.requestAnimationFrame || setTimeout)(function () {
+        pending = 0;
+        var next = q.value.trim().slice(0, 50);
+        clearBtn.hidden = !q.value;
+        if (next === query) return;
+        query = next;
+        render();
+      });
+    }
+    q.addEventListener('compositionstart', function () { composing = true; });
+    q.addEventListener('compositionend', function () { composing = false; schedule(); });
+    q.addEventListener('input', function (e) { if (!composing && !e.isComposing) schedule(); });
+    q.addEventListener('search', schedule);
+    q.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.isComposing) { q.blur(); var first = main.querySelector('.sec'); if (first) jumpTo(first.id); }
+    });
+    clearBtn.addEventListener('click', function () { q.value = ''; query = ''; clearBtn.hidden = true; render(); q.focus(); });
+
+    var g = $('view-grid'), l = $('view-list');
+    if (g) g.addEventListener('click', function () { view = 'grid'; save('reswing-view', view); render(); });
+    if (l) l.addEventListener('click', function () { view = 'list'; save('reswing-view', view); render(); });
+    if (mq) {
+      if (mq.addEventListener) mq.addEventListener('change', render);
+      else if (mq.addListener) mq.addListener(render);
+    }
+
+    var toTop = $('to-top'), ticking = false;
+    window.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      (window.requestAnimationFrame || setTimeout)(function () {
+        ticking = false;
+        if (toTop) toTop.hidden = window.pageYOffset < 700;
+        updateActive();
+      });
+    }, { passive: true });
+    window.addEventListener('resize', updateActive);
+    if (toTop) toTop.addEventListener('click', function () { jumpTo('top'); });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === '/' && document.activeElement !== q) { e.preventDefault(); q.focus(); }
+    });
+
+    render();
+    var h = (location.hash || '').slice(1);
+    if (SEC[h]) setTimeout(function () { jumpTo(h); }, 0);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', safeStart);
+  else safeStart();
+  function safeStart() {
+    try { start(); }
+    catch (e) { if (window.console) console.error('Re:Swing library: 操作の準備に失敗しました。一覧はそのまま使えます。', e); }
+  }
+})();
 </script>
 </body>
 </html>
