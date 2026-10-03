@@ -25,6 +25,7 @@
   --radius:4px;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased;
   background-image:radial-gradient(1200px 600px at 80% -10%,rgba(201,169,110,.07),transparent 60%),radial-gradient(900px 500px at -10% 20%,rgba(29,74,53,.18),transparent 60%);background-attachment:fixed}
 button{font:inherit;color:inherit}
@@ -171,36 +172,104 @@ main{padding-block:12px 80px}
 footer{color:var(--faint);font-size:12px;letter-spacing:.04em;padding-block:28px 48px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 footer .eyebrow{font-size:11px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* usability additions */
+a{color:inherit}
+.brand{text-decoration:none}
+.bar-row{display:flex;align-items:center;gap:16px;justify-content:space-between}
+.bar-row .chips{flex:1;min-width:0}
+.chip{text-decoration:none}
+.chip[aria-current="true"]{color:var(--gold-hi);border-bottom-color:var(--gold)}
+.chip[aria-current="true"] span{color:var(--gold)}
+.tools{display:flex;align-items:center;gap:8px;flex:none;padding-bottom:4px}
+.seg{display:flex;border:1px solid var(--line-strong);border-radius:2px}
+.tool{border:1px solid var(--line-strong);background:transparent;color:var(--muted);border-radius:2px;font-size:12px;letter-spacing:.06em;height:30px;padding:0 10px;cursor:pointer;display:grid;place-items:center;transition:all .2s}
+.seg .tool{border:0;border-radius:0;width:34px;padding:0}
+.seg .tool+.tool{border-left:1px solid var(--line-strong)}
+.tool:hover{color:var(--gold-hi)}
+.tool[aria-pressed="true"]{color:var(--on-gold);background:var(--gold);border-color:var(--gold)}
+@media (max-width:560px){.bar-row{flex-direction:column;align-items:stretch;gap:0}.tools{justify-content:flex-end;padding-bottom:10px}}
+.sec{scroll-margin-top:calc(env(safe-area-inset-top,0px) + 150px)}
+#top{scroll-margin-top:200px}
+
+.resume{margin-top:18px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:16px;max-width:640px;padding:14px 18px;border:1px solid var(--line-strong);border-radius:3px;text-decoration:none;background:linear-gradient(90deg,rgba(201,169,110,.12),rgba(201,169,110,.02));transition:border-color .25s,background .25s}
+a.resume:hover{border-color:var(--gold);background:linear-gradient(90deg,rgba(201,169,110,.2),rgba(201,169,110,.04))}
+.resume-play{width:44px;height:44px;border-radius:50%;background:var(--gold);display:grid;place-items:center}
+.resume-play::after{content:"";border-style:solid;border-width:8px 0 8px 13px;border-color:transparent transparent transparent var(--on-gold);margin-left:3px}
+.resume-text{min-width:0;display:flex;flex-direction:column}
+.resume-label{font-size:12px;letter-spacing:.08em;color:var(--gold)}
+.resume-title{font-family:var(--font-display);font-weight:600;font-size:17px;letter-spacing:.05em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.resume-count{font-family:var(--font-latin);font-size:18px;color:var(--muted);font-variant-numeric:lining-nums tabular-nums}
+.resume.done{grid-template-columns:minmax(0,1fr)}
+
+.ov{cursor:default}
+.ov-num{text-decoration:none}
+.ov-title{text-decoration:none}
+.ov-title span{color:var(--gold);transition:margin .2s}
+.ov-title:hover span{margin-left:4px}
+.ov-next{display:block;margin-top:8px;font-size:12.5px;color:var(--gold-hi);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:.03em}
+.ov-next:not(.is-done)::before{content:"▶ ";font-size:10px;color:var(--gold)}
+.ov-next:hover{text-decoration:underline;text-underline-offset:3px}
+.ov-next.is-done{color:var(--muted)}
+
+.info-text{display:flex;flex-direction:column;text-decoration:none;cursor:pointer;padding:2px 0}
+.info-title{font-family:var(--font-display);font-size:16.5px;font-weight:600;line-height:1.5;letter-spacing:.05em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;transition:color .25s}
+.info-text:hover .info-title{color:var(--gold-hi);text-decoration:underline;text-decoration-color:var(--gold-lo);text-underline-offset:4px}
+.card.is-seen .info-title{color:var(--muted)}
+.card.is-seen .thumb img,.card.is-seen .thumb .tile{filter:saturate(.6) brightness(.8)}
+
+/* list view */
+.grid.list{grid-template-columns:minmax(0,1fr);gap:0}
+.grid.list .card{display:grid;grid-template-columns:clamp(120px,28vw,220px) minmax(0,1fr);gap:16px;align-items:center;padding-block:12px;border-bottom:1px solid var(--line)}
+.grid.list .thumb{box-shadow:none}
+.grid.list .tile-title,.grid.list .tile-sec{display:none}
+.grid.list .tile-num{font-size:clamp(28px,5vw,44px)}
+.grid.list .watch{margin-top:8px}
+@media (max-width:480px){.grid.list .info{flex-direction:column;gap:4px}.grid.list .watch{margin-top:0}.grid.list .info-title{font-size:15px}.grid.list .badge{display:none}}
+
+.empty .btn{margin-top:16px}
+.to-top{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);z-index:30;width:44px;height:44px;border-radius:50%;border:1px solid var(--gold);background:rgba(11,15,13,.85);color:var(--gold-hi);font-size:18px;cursor:pointer;backdrop-filter:blur(6px)}
+@media (max-width:600px){.watch{padding:6px 10px}.chip{padding:12px 0 13px}}
 </style>
 </head>
 <body>
 <header class="top">
   <div class="wrap">
     <div class="top-row">
-      <div class="brand">
+      <a class="brand" href="#top" data-jump="top">
         <div class="mark" aria-hidden="true">R</div>
         <h1>Re:Swing<small>Video Library</small></h1>
-      </div>
+      </a>
       <label class="search" for="q">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.5"/><path d="m20 20-4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        <input id="q" type="search" placeholder="レッスンを探す　グリップ・前傾・素振り" autocomplete="off">
+        <input id="q" type="search" placeholder="レッスンを探す　グリップ・前傾・素振り" autocomplete="off" enterkeyhint="search">
         <button class="clear" id="clear" type="button" aria-label="検索をクリア" hidden>✕</button>
       </label>
     </div>
-    <nav class="chips" id="chips" aria-label="カテゴリ"></nav>
+    <div class="bar-row">
+      <nav class="chips" id="chips" aria-label="コースへ移動"></nav>
+      <div class="tools">
+        <button class="tool" id="only-new" type="button" aria-pressed="false">未視聴だけ</button>
+        <div class="seg" role="group" aria-label="表示の切り替え">
+          <button class="tool" id="view-grid" type="button" aria-pressed="true" aria-label="カードで表示"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="0" y="0" width="6" height="6" fill="currentColor"/><rect x="8" y="0" width="6" height="6" fill="currentColor"/><rect x="0" y="8" width="6" height="6" fill="currentColor"/><rect x="8" y="8" width="6" height="6" fill="currentColor"/></svg></button>
+          <button class="tool" id="view-list" type="button" aria-pressed="false" aria-label="リストで表示"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="0" y="1" width="14" height="2" fill="currentColor"/><rect x="0" y="6" width="14" height="2" fill="currentColor"/><rect x="0" y="11" width="14" height="2" fill="currentColor"/></svg></button>
+        </div>
+      </div>
+    </div>
   </div>
 </header>
 
-<div class="wrap">
+<div class="wrap" id="top">
   <section class="hero">
     <div class="eyebrow">Members Lesson Archive</div>
-    <h2>構えから、振り切るまで。</h2>
-    <p>Re:Swing のレッスン動画を、構え方編・スイング編・ドリル集の順にまとめました。STEP の順に見ると、ひとつずつ積み上がるように組んであります。</p>
+    <h2>構えから、<br>振り切るまで。</h2>
+    <p>タイトルかサムネイルをタップすると、その動画がすぐに開きます。Lesson の順に見ると、ひとつずつ積み上がるように組んであります。</p>
+    <div id="resume"></div>
   </section>
   <section class="overview" id="overview" aria-label="コースごとの視聴状況"></section>
   <main id="main"></main>
-  <footer><span class="eyebrow">Re:Swing Golf Lesson</span><span>動画を開くと「視聴済み」になります。視聴記録はこのブラウザにだけ保存されます。</span></footer>
+  <footer><span class="eyebrow">Re:Swing Golf Lesson</span><span>開いた動画は自動で「視聴済み」になります。視聴記録はこのブラウザにだけ保存されます。</span></footer>
 </div>
+<button class="to-top" id="to-top" type="button" aria-label="いちばん上へ" hidden>↑</button>
 
 <div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="now-title">
   <div class="panel">
@@ -269,197 +338,243 @@ const VIDEOS = [
   gd('drill', 17, '連続素振り', '19V1NIh4EzTXffYyNkz2kO8zMewLnUUgV'),
 ].map((v, i) => ({ ...v, idx: i, key: v.src + ':' + v.id }));
 
-const secOf = k => SECTIONS.find(s => s.key === k);
 const THUMBS = {}; /*THUMBS*/
+const secOf = k => SECTIONS.find(s => s.key === k);
 const thumbUrl = v => THUMBS[v.id] || (v.src === 'yt' ? `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg` : `https://drive.google.com/thumbnail?id=${v.id}&sz=w640`);
 const watchUrl = v => v.src === 'yt' ? `https://www.youtube.com/watch?v=${v.id}` : `https://drive.google.com/file/d/${v.id}/view`;
 const embedUrl = v => v.src === 'yt' ? `https://www.youtube-nocookie.com/embed/${v.id}?autoplay=1&rel=0&playsinline=1` : `https://drive.google.com/file/d/${v.id}/preview`;
 const srcLabel = v => v.src === 'yt' ? 'YouTube' : 'Drive';
-const stepLabel = v => v.sec === 'drill' ? `Drill ${pad(v.step)}` : `Lesson ${pad(v.step)}`;
+const srcLabelJa = v => v.src === 'yt' ? 'YouTube' : 'Googleドライブ';
 const pad = n => String(n).padStart(2, '0');
+const stepLabel = v => v.sec === 'drill' ? `Drill ${pad(v.step)}` : `Lesson ${pad(v.step)}`;
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const norm = s => s.normalize('NFKC').toLowerCase().replace(/[\s【】・]/g, '');
+const $ = id => document.getElementById(id);
 
-// 外部の画像が読み込めた環境なら、動画もページ内で再生できるとみなす
+// 外部の画像が読み込めた環境 (このページを自分で公開した場合) なら、動画もページ内で再生する
 let canEmbed = false;
 
-// 視聴記録 (このブラウザだけ)
-const STORE = 'reswing-watched-v1';
-let watched = new Set();
-try { watched = new Set(JSON.parse(localStorage.getItem(STORE) || '[]')); } catch (e) {}
-const saveWatched = () => { try { localStorage.setItem(STORE, JSON.stringify([...watched])); } catch (e) {} };
-
-let filter = 'all';
+const load = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } };
+const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+let watched = new Set(load('reswing-watched-v1', []));
+let view = load('reswing-view', 'grid') === 'list' ? 'list' : 'grid';
+let onlyNew = !!load('reswing-only-new', false);
 let query = '';
-const VALID = ['all', ...SECTIONS.map(s => s.key)];
-const fromHash = location.hash.slice(1);
-if (VALID.includes(fromHash)) filter = fromHash;
-else { try { const f = localStorage.getItem('reswing-filter'); if (VALID.includes(f)) filter = f; } catch (e) {} }
+const saveWatched = () => save('reswing-watched-v1', [...watched]);
 
 function tileHTML(v) {
-  const s = secOf(v.sec);
   return `<div class="tile" data-sec="${v.sec}">
-    <div class="tile-sec">${esc(s.en.split(' — ')[1])}</div>
+    <div class="tile-sec">${esc(secOf(v.sec).en.split(' — ')[1])}</div>
     <div class="tile-mid"><div class="tile-num">${pad(v.step)}</div></div>
     <div class="tile-title">${esc(v.title)}</div>
   </div>`;
 }
-function thumbHTML(v, extraClass = '') {
+function thumbInner(v) {
   return `${tileHTML(v)}
     <img src="${thumbUrl(v)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-thumb>
     <span class="play" aria-hidden="true"><i></i></span>
     <span class="badge">${srcLabel(v)}</span>
     ${watched.has(v.key) ? '<span class="seen-flag">視聴済み</span>' : ''}`;
 }
+// 動画へのリンク。タップするとそのまま YouTube / ドライブが開く
+const goAttrs = v => `href="${watchUrl(v)}" target="_blank" rel="noopener" data-go="${v.idx}"`;
+
 function wireThumbs(root) {
   root.querySelectorAll('img[data-thumb]').forEach(img => {
     const box = img.parentElement;
+    const bad = () => img.remove();
     const ok = () => {
-      // Drive は未公開ファイルだと小さなアイコンを返すので実サイズで判定
-      if (img.naturalWidth < 120) return bad();
+      if (img.naturalWidth < 120) return bad(); // Drive の非公開ファイルは小さなアイコンが返る
       box.classList.add('has-img');
       if (!img.src.startsWith('data:')) canEmbed = true;
     };
-    const bad = () => img.remove();
-    if (img.complete && img.naturalWidth) ok(); else { img.addEventListener('load', ok, { once: true }); img.addEventListener('error', bad, { once: true }); }
+    if (img.complete && img.naturalWidth) ok();
+    else { img.addEventListener('load', ok, { once: true }); img.addEventListener('error', bad, { once: true }); }
   });
 }
 
-function matches(v) {
-  if (filter !== 'all' && v.sec !== filter) return false;
-  if (!query) return true;
-  const q = norm(query);
-  return norm(v.title + secOf(v.sec).name + stepLabel(v) + srcLabel(v)).includes(q);
-}
+const matches = v => (!onlyNew || !watched.has(v.key)) && (!query || norm(v.title + secOf(v.sec).name + stepLabel(v) + srcLabelJa(v)).includes(norm(query)));
+const nextUnwatched = (list = VIDEOS) => list.find(v => !watched.has(v.key));
 
 function renderChips() {
-  const chips = [{ key: 'all', name: 'すべて', n: VIDEOS.length }, ...SECTIONS.map(s => ({ key: s.key, name: s.name, n: VIDEOS.filter(v => v.sec === s.key).length }))];
-  document.getElementById('chips').innerHTML = chips.map(c =>
-    `<button class="chip" type="button" data-filter="${c.key}" aria-pressed="${filter === c.key}">${esc(c.name)}<span>${c.n}</span></button>`).join('');
+  $('chips').innerHTML = SECTIONS.map(s => {
+    const n = VIDEOS.filter(v => v.sec === s.key && matches(v)).length;
+    return `<a class="chip" href="#${s.key}" data-jump="${s.key}" aria-current="false">${esc(s.name)}<span>${n}</span></a>`;
+  }).join('');
+  updateActiveChip();
+}
+function renderResume() {
+  const v = nextUnwatched();
+  const done = VIDEOS.filter(x => watched.has(x.key)).length;
+  $('resume').innerHTML = v
+    ? `<a class="resume" ${goAttrs(v)}>
+        <span class="resume-play" aria-hidden="true"></span>
+        <span class="resume-text"><span class="resume-label">${done ? '続きから見る' : 'はじめから見る'}　${esc(secOf(v.sec).name)}・${stepLabel(v)}</span><span class="resume-title">${esc(v.title)}</span></span>
+        <span class="resume-count">${done} / ${VIDEOS.length}</span>
+      </a>`
+    : `<div class="resume done"><span class="resume-text"><span class="resume-label">Complete</span><span class="resume-title">全${VIDEOS.length}本、すべて視聴済みです</span></span></div>`;
 }
 function renderOverview() {
-  document.getElementById('overview').innerHTML = SECTIONS.map(s => {
+  $('overview').innerHTML = SECTIONS.map((s, i) => {
     const list = VIDEOS.filter(v => v.sec === s.key);
     const done = list.filter(v => watched.has(v.key)).length;
-    const next = list.find(v => !watched.has(v.key));
-    return `<button class="ov" type="button" data-filter="${s.key}">
-      <span class="ov-num">${pad(list.length)}</span>
-      <span class="ov-body">
-        <span class="ov-title">${esc(s.name)}</span>
-        <span class="ov-sub">${done} / ${list.length} 本 視聴済み${next ? ` ・ 次は「${esc(next.title)}」` : ' ・ すべて視聴済み'}</span>
+    const next = nextUnwatched(list);
+    return `<div class="ov">
+      <a class="ov-num" href="#${s.key}" data-jump="${s.key}" aria-label="${esc(s.name)}へ移動">${pad(list.length)}</a>
+      <div class="ov-body">
+        <a class="ov-title" href="#${s.key}" data-jump="${s.key}">${esc(s.name)} <span aria-hidden="true">›</span></a>
+        <span class="ov-sub">${done} / ${list.length} 本 視聴済み</span>
         <span class="bar"><i style="width:${list.length ? done / list.length * 100 : 0}%"></i></span>
-      </span>
-    </button>`;
+        ${next ? `<a class="ov-next" ${goAttrs(next)}>次は「${esc(next.title)}」</a>` : '<span class="ov-next is-done">すべて視聴済み</span>'}
+      </div>
+    </div>`;
   }).join('');
 }
 function cardHTML(v) {
   const on = watched.has(v.key);
-  return `<article class="card">
-    <button class="thumb" type="button" data-open="${v.idx}" aria-label="${esc(v.title)} を再生">${thumbHTML(v)}</button>
+  return `<article class="card${on ? ' is-seen' : ''}">
+    <a class="thumb" ${goAttrs(v)} aria-label="${esc(v.title)}を${srcLabelJa(v)}で開く">${thumbInner(v)}</a>
     <div class="info">
-      <div class="info-text">
+      <a class="info-text" ${goAttrs(v)}>
         <span class="step">${stepLabel(v)}</span>
-        <h3 data-open="${v.idx}">${esc(v.title)}</h3>
-        <div class="sub">${esc(secOf(v.sec).name)} ・ ${srcLabel(v)}</div>
-      </div>
-      <button class="watch" type="button" data-watch="${v.idx}" aria-pressed="${on}">${on ? '✓ 視聴済み' : '未視聴'}</button>
+        <span class="info-title">${esc(v.title)}</span>
+        <span class="sub">${esc(secOf(v.sec).name)} ・ ${srcLabelJa(v)}で開く ↗</span>
+      </a>
+      <button class="watch" type="button" data-watch="${v.idx}" aria-pressed="${on}" aria-label="${esc(v.title)}を${on ? '未視聴に戻す' : '視聴済みにする'}">${on ? '✓ 視聴済み' : '未視聴'}</button>
     </div>
   </article>`;
 }
 function renderMain() {
-  const main = document.getElementById('main');
-  const secs = SECTIONS.filter(s => filter === 'all' || s.key === filter);
   let html = '';
-  for (const s of secs) {
-    const list = VIDEOS.filter(v => v.sec === s.key && matches(v));
-    if (!list.length) continue;
+  for (const s of SECTIONS) {
     const all = VIDEOS.filter(v => v.sec === s.key);
+    const list = all.filter(matches);
+    if (!list.length) continue;
     const done = all.filter(v => watched.has(v.key)).length;
-    html += `<section class="sec" id="sec-${s.key}">
-      <div class="sec-head"><span class="eyebrow">${esc(s.en)}</span><h2>${esc(s.name)}</h2><span class="count">${query ? `${list.length} 件` : `全${all.length}本 ／ 視聴済み ${done}本`}</span><p>${esc(s.desc)}</p></div>
-      <div class="grid">${list.map(cardHTML).join('')}</div>
+    html += `<section class="sec" id="${s.key}">
+      <div class="sec-head"><span class="eyebrow">${esc(s.en)}</span><h2>${esc(s.name)}</h2><span class="count">${query || onlyNew ? `${list.length} 本を表示中` : `全${all.length}本 ／ 視聴済み ${done}本`}</span><p>${esc(s.desc)}</p></div>
+      <div class="grid${view === 'list' ? ' list' : ''}">${list.map(cardHTML).join('')}</div>
     </section>`;
   }
-  main.innerHTML = html || `<div class="empty">「${esc(query)}」に一致する動画はありません。別の言葉で検索してください。</div>`;
-  wireThumbs(main);
+  $('main').innerHTML = html || `<div class="empty">${query ? `「${esc(query)}」に一致する動画はありません。` : '未視聴の動画はありません。'}<br><button class="btn" type="button" data-reset>条件をクリア</button></div>`;
+  wireThumbs($('main'));
+  observeSections();
 }
-function renderAll() { renderChips(); renderOverview(); renderMain(); }
+function renderTools() {
+  $('only-new').setAttribute('aria-pressed', onlyNew);
+  $('view-grid').setAttribute('aria-pressed', view === 'grid');
+  $('view-list').setAttribute('aria-pressed', view === 'list');
+}
+function renderAll() { renderResume(); renderOverview(); renderChips(); renderMain(); renderTools(); }
 
-function setFilter(f) {
-  filter = f;
-  try { localStorage.setItem('reswing-filter', f); } catch (e) {}
-  history.replaceState(null, '', f === 'all' ? location.pathname + location.search : '#' + f);
-  renderAll();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+// ---- 移動 ----
+function jumpTo(key, smooth = true) {
+  const el = key === 'top' ? $('top') : $(key);
+  if (!el) return;
+  el.scrollIntoView({ behavior: smooth && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto', block: 'start' });
+  history.replaceState(null, '', key === 'top' ? location.pathname + location.search : '#' + key);
 }
-function toggleWatched(v, force) {
-  const on = force ?? !watched.has(v.key);
-  on ? watched.add(v.key) : watched.delete(v.key);
-  saveWatched();
+let activeSec = null, io = null;
+function updateActiveChip() {
+  document.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-current', c.dataset.jump === activeSec ? 'true' : 'false'));
 }
+function observeSections() {
+  io?.disconnect();
+  io = new IntersectionObserver(entries => {
+    const vis = [...document.querySelectorAll('.sec')].filter(s => { const r = s.getBoundingClientRect(); return r.top < innerHeight * 0.45 && r.bottom > 140; });
+    activeSec = vis.length ? vis[vis.length - 1].id : null;
+    updateActiveChip();
+  }, { threshold: [0, .25, .5, .75, 1] });
+  document.querySelectorAll('.sec').forEach(s => io.observe(s));
+}
+addEventListener('scroll', () => { $('to-top').hidden = scrollY < 700; }, { passive: true });
+$('to-top').addEventListener('click', () => jumpTo('top'));
 
+// ---- 操作 ----
+function setWatched(v, on) { on ? watched.add(v.key) : watched.delete(v.key); saveWatched(); }
 document.addEventListener('click', e => {
-  const f = e.target.closest('[data-filter]');
-  if (f) return setFilter(f.dataset.filter);
-  const o = e.target.closest('[data-open]');
-  if (o) return openPlayer(+o.dataset.open);
+  const go = e.target.closest('[data-go]');
+  if (go) {
+    const v = VIDEOS[+go.dataset.go];
+    setWatched(v, true);
+    if (canEmbed) { e.preventDefault(); openPlayer(v.idx); }
+    // リンクはそのまま開かせて、表示の更新は少し後で行う
+    else setTimeout(() => { renderResume(); renderOverview(); renderChips(); refreshCards(); }, 250);
+    return;
+  }
+  const j = e.target.closest('[data-jump]');
+  if (j) { e.preventDefault(); return jumpTo(j.dataset.jump); }
   const w = e.target.closest('[data-watch]');
-  if (w) { toggleWatched(VIDEOS[+w.dataset.watch]); renderOverview(); renderMain(); }
+  if (w) { const v = VIDEOS[+w.dataset.watch]; setWatched(v, !watched.has(v.key)); renderResume(); renderOverview(); renderChips(); refreshCards(); return; }
+  if (e.target.closest('[data-reset]')) { query = ''; $('q').value = ''; $('clear').hidden = true; onlyNew = false; save('reswing-only-new', false); renderAll(); }
 });
-const q = document.getElementById('q'), clearBtn = document.getElementById('clear');
-q.addEventListener('input', () => { query = q.value.trim(); clearBtn.hidden = !q.value; renderMain(); });
-clearBtn.addEventListener('click', () => { q.value = ''; query = ''; clearBtn.hidden = true; renderMain(); q.focus(); });
+// 「未視聴だけ」表示中でも、見た直後のカードはその場に残して位置がずれないようにする
+function refreshCards() {
+  if (onlyNew) {
+    document.querySelectorAll('.card').forEach(card => {
+      const v = VIDEOS[+card.querySelector('[data-watch]').dataset.watch];
+      const fresh = document.createElement('div'); fresh.innerHTML = cardHTML(v);
+      card.replaceWith(fresh.firstElementChild);
+    });
+    wireThumbs($('main'));
+  } else renderMain();
+}
+$('only-new').addEventListener('click', () => { onlyNew = !onlyNew; save('reswing-only-new', onlyNew); renderChips(); renderMain(); renderTools(); });
+$('view-grid').addEventListener('click', () => { view = 'grid'; save('reswing-view', view); renderMain(); renderTools(); });
+$('view-list').addEventListener('click', () => { view = 'list'; save('reswing-view', view); renderMain(); renderTools(); });
+const q = $('q'), clearBtn = $('clear');
+q.addEventListener('input', () => { query = q.value.trim(); clearBtn.hidden = !q.value; renderChips(); renderMain(); });
+q.addEventListener('keydown', e => { if (e.key === 'Enter') { q.blur(); const first = document.querySelector('.sec'); first && jumpTo(first.id); } });
+clearBtn.addEventListener('click', () => { q.value = ''; query = ''; clearBtn.hidden = true; renderChips(); renderMain(); q.focus(); });
 
-// ---- player ----
-const sheet = document.getElementById('sheet');
+// ---- ページ内プレーヤー (埋め込みが使える環境だけ) ----
+const sheet = $('sheet');
 let current = -1, lastFocus = null;
 function openPlayer(i) {
   if (current < 0) lastFocus = document.activeElement;
   current = i;
   const v = VIDEOS[i], s = secOf(v.sec);
-  toggleWatched(v, true);
-  const stage = document.getElementById('stage');
-  if (canEmbed) {
-    stage.innerHTML = `<iframe src="${embedUrl(v)}" title="${esc(v.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
-  } else {
-    stage.innerHTML = `${tileHTML(v)}${THUMBS[v.id] ? `<img class="still" src="${THUMBS[v.id]}" alt="">` : ''}<div class="stage-cta"><a class="open-btn" href="${watchUrl(v)}" target="_blank" rel="noopener">${v.src === 'yt' ? 'YouTube' : 'Googleドライブ'}で再生する</a></div>`;
-  }
-  document.getElementById('now-title').textContent = v.title;
-  document.getElementById('now-meta').innerHTML = `<span>${esc(s.name)}</span><span>・</span><span>${v.src === 'yt' ? 'YouTube' : 'Googleドライブ'}</span>`;
-  document.getElementById('now-step').textContent = stepLabel(v);
-  document.getElementById('ext').href = watchUrl(v);
-  document.getElementById('prev').disabled = i === 0;
-  document.getElementById('next').disabled = i === VIDEOS.length - 1;
-  const nw = document.getElementById('now-watch');
-  nw.setAttribute('aria-pressed', 'true'); nw.textContent = '✓ 視聴済み';
-  document.getElementById('upnext-title').textContent = `${s.name}　全${VIDEOS.filter(x => x.sec === v.sec).length}本`;
-  const ol = document.getElementById('upnext');
+  setWatched(v, true);
+  $('stage').innerHTML = `<iframe src="${embedUrl(v)}" title="${esc(v.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+  $('now-step').textContent = stepLabel(v);
+  $('now-title').textContent = v.title;
+  $('now-meta').innerHTML = `<span>${esc(s.name)}</span><span>・</span><span>${srcLabelJa(v)}</span>`;
+  $('ext').href = watchUrl(v);
+  $('prev').disabled = i === 0;
+  $('next').disabled = i === VIDEOS.length - 1;
+  $('now-watch').setAttribute('aria-pressed', 'true'); $('now-watch').textContent = '✓ 視聴済み';
+  $('upnext-title').textContent = `${s.name}　全${VIDEOS.filter(x => x.sec === v.sec).length}本`;
+  const ol = $('upnext');
   ol.innerHTML = VIDEOS.filter(x => x.sec === v.sec).map(x => `<li><button class="un" type="button" data-open="${x.idx}" ${x.idx === i ? 'aria-current="true"' : ''}>
-      <span class="thumb">${thumbHTML(x)}</span>
+      <span class="thumb">${thumbInner(x)}</span>
       <span><span class="un-t">${esc(x.title)}</span><span class="un-s">${stepLabel(x)}${watched.has(x.key) ? ' · Watched' : ''}</span></span>
     </button></li>`).join('');
   wireThumbs(ol);
   sheet.hidden = false;
   document.body.style.overflow = 'hidden';
   ol.querySelector('[aria-current]')?.scrollIntoView({ block: 'nearest' });
-  document.getElementById('close').focus({ preventScroll: true });
-  renderOverview(); renderMain();
+  $('close').focus({ preventScroll: true });
+  renderResume(); renderOverview(); renderChips(); refreshCards();
 }
 function closePlayer() {
   sheet.hidden = true; current = -1;
-  document.getElementById('stage').innerHTML = '';
+  $('stage').innerHTML = '';
   document.body.style.overflow = '';
   lastFocus?.focus?.({ preventScroll: true });
 }
-document.getElementById('close').addEventListener('click', closePlayer);
-sheet.addEventListener('click', e => { if (e.target === sheet) closePlayer(); });
-document.getElementById('prev').addEventListener('click', () => current > 0 && openPlayer(current - 1));
-document.getElementById('next').addEventListener('click', () => current < VIDEOS.length - 1 && openPlayer(current + 1));
-document.getElementById('now-watch').addEventListener('click', e => {
-  const v = VIDEOS[current]; toggleWatched(v);
+sheet.addEventListener('click', e => {
+  const o = e.target.closest('[data-open]');
+  if (o) return openPlayer(+o.dataset.open);
+  if (e.target === sheet) closePlayer();
+});
+$('close').addEventListener('click', closePlayer);
+$('prev').addEventListener('click', () => current > 0 && openPlayer(current - 1));
+$('next').addEventListener('click', () => current < VIDEOS.length - 1 && openPlayer(current + 1));
+$('now-watch').addEventListener('click', e => {
+  const v = VIDEOS[current]; setWatched(v, !watched.has(v.key));
   const on = watched.has(v.key);
   e.currentTarget.setAttribute('aria-pressed', on); e.currentTarget.textContent = on ? '✓ 視聴済み' : '視聴済みにする';
-  renderOverview(); renderMain();
+  renderResume(); renderOverview(); renderChips(); refreshCards();
 });
 document.addEventListener('keydown', e => {
   if (sheet.hidden) { if (e.key === '/' && document.activeElement !== q) { e.preventDefault(); q.focus(); } return; }
@@ -467,6 +582,8 @@ document.addEventListener('keydown', e => {
 });
 
 renderAll();
+const startHash = location.hash.slice(1);
+if (SECTIONS.some(s => s.key === startHash)) requestAnimationFrame(() => jumpTo(startHash, false));
 </script>
 </body>
 </html>
