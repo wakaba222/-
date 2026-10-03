@@ -59,3 +59,265 @@ body {
     display: none;
   }
 }
+
+/*
+ * Re:swing 診断シート (/coach/sheet) の印刷レイアウト。
+ * A4 縦一枚に収まるよう mm 単位で組む。画面には出さず、印刷・PDF 保存のときだけ表示される。
+ */
+@page reswing-sheet {
+  size: A4 portrait;
+  margin: 0;
+}
+
+.rs-sheet {
+  --rs-navy: #151b2e;
+  --rs-gold: #a8823d;
+  --rs-gold-light: #d8bd7e;
+  --rs-gold-dark: #6f5222;
+  --rs-paper: #fbf9f4;
+  --rs-rule: #e3ded2;
+  --rs-serif: 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif;
+
+  page: reswing-sheet;
+  position: relative;
+  box-sizing: border-box;
+  width: 210mm;
+  height: 296.5mm;
+  overflow: hidden;
+  padding: 13mm 12mm 0;
+  background: var(--rs-paper);
+  color: var(--rs-navy);
+  font-family: var(--font-sans);
+  font-size: 10pt;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.rs-decor {
+  position: absolute;
+  width: 90mm;
+  height: 90mm;
+  pointer-events: none;
+}
+.rs-decor-tl {
+  top: -45mm;
+  left: -45mm;
+  transform: rotate(45deg);
+  background: linear-gradient(90deg, transparent 47%, var(--rs-gold-light) 47%, var(--rs-gold) 49%, transparent 49%,
+    transparent 52%, var(--rs-navy) 52%, var(--rs-navy) 56%, transparent 56%);
+}
+.rs-decor-br {
+  right: -40mm;
+  bottom: -40mm;
+  transform: rotate(45deg);
+  background: linear-gradient(90deg, transparent 30%, var(--rs-navy) 30%, var(--rs-navy) 44%, var(--rs-gold-dark) 44%,
+    var(--rs-gold-light) 48%, var(--rs-gold) 51%, transparent 51%, transparent 55%, var(--rs-gold-light) 55%,
+    var(--rs-gold-light) 56%, transparent 56%);
+}
+.rs-ball {
+  position: absolute;
+  top: -22mm;
+  right: -14mm;
+  width: 72mm;
+  height: 72mm;
+  border-radius: 50%;
+  opacity: 0.55;
+  background:
+    radial-gradient(circle, rgba(0, 0, 0, 0.07) 0.9mm, transparent 1.1mm) 0 0 / 4mm 4mm,
+    radial-gradient(circle at 35% 30%, #ffffff 0%, #ecebe7 55%, #cfcdc6 100%);
+}
+
+.rs-title {
+  position: relative;
+  margin-bottom: 9mm;
+}
+.rs-title h1 {
+  display: flex;
+  align-items: baseline;
+  margin: 0;
+  line-height: 1;
+}
+.rs-title-re,
+.rs-title-swing {
+  font-family: var(--rs-serif);
+  font-size: 46pt;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.rs-title-swing {
+  /* グラデーション文字は PDF 化で枠線が出るブラウザがあるため単色にする */
+  color: var(--rs-gold);
+}
+.rs-title-ja {
+  margin-left: 5mm;
+  font-family: var(--rs-serif);
+  font-size: 26pt;
+  font-weight: 700;
+}
+.rs-title-rule {
+  width: 34mm;
+  height: 0.6mm;
+  margin-top: 3mm;
+  background: var(--rs-gold);
+}
+
+.rs-section {
+  position: relative;
+  margin-bottom: 7mm;
+  border: 0.25mm solid var(--rs-rule);
+  background: #fff;
+}
+.rs-section-head {
+  display: flex;
+  align-items: center;
+  height: 13mm;
+}
+.rs-section-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  width: 13mm;
+  background: linear-gradient(135deg, var(--rs-gold-light), var(--rs-gold) 50%, var(--rs-gold-dark));
+  color: #fff;
+  font-family: var(--rs-serif);
+  font-size: 22pt;
+  font-weight: 700;
+}
+.rs-section-title {
+  margin-left: 4mm;
+  font-family: var(--rs-serif);
+  font-size: 17pt;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.rs-section-en {
+  margin-left: 6mm;
+  font-family: var(--rs-serif);
+  font-size: 7.5pt;
+  letter-spacing: 0.25em;
+  color: #7c7f8a;
+  white-space: nowrap;
+}
+.rs-section-line {
+  flex: 1;
+  height: 0.2mm;
+  margin: 0 3mm;
+  background: #b9b6ad;
+}
+.rs-section-tagline {
+  margin-right: 3mm;
+  font-family: var(--rs-serif);
+  font-size: 7.5pt;
+  white-space: nowrap;
+}
+
+.rs-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.rs-col-no {
+  width: 13mm;
+}
+.rs-col-label {
+  width: 56mm;
+}
+.rs-col-max {
+  width: 19mm;
+}
+.rs-col-score {
+  width: 28mm;
+}
+.rs-table th {
+  height: 8mm;
+  background: var(--rs-navy);
+  color: #fff;
+  font-size: 9pt;
+  font-weight: 600;
+  text-align: center;
+}
+.rs-table th + th {
+  border-left: 0.2mm solid #3a4156;
+}
+.rs-table td {
+  height: 9.2mm;
+  padding: 0 3mm;
+  border-top: 0.2mm solid var(--rs-rule);
+  vertical-align: middle;
+}
+.rs-table td + td {
+  border-left: 0.2mm solid var(--rs-rule);
+}
+.rs-table td.rs-no {
+  padding: 0;
+  border-top-color: rgba(255, 255, 255, 0.25);
+  background: linear-gradient(90deg, var(--rs-gold-dark), var(--rs-gold));
+  color: #fff;
+  font-family: var(--rs-serif);
+  font-size: 11pt;
+  text-align: center;
+}
+.rs-label {
+  font-size: 9.5pt;
+  font-weight: 600;
+}
+.rs-max {
+  font-family: var(--rs-serif);
+  font-size: 10.5pt;
+  text-align: center;
+}
+.rs-max small {
+  font-size: 6.5pt;
+}
+.rs-score {
+  font-family: var(--rs-serif);
+  text-align: center;
+  white-space: nowrap;
+}
+.rs-score strong {
+  font-size: 13pt;
+  font-weight: 700;
+  color: var(--rs-navy);
+}
+.rs-score-max {
+  font-size: 9.5pt;
+  color: #b6b3ab;
+}
+.rs-memo div {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 8pt;
+  line-height: 1.3;
+}
+
+.rs-footer {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4mm;
+  margin-top: 2mm;
+}
+.rs-box {
+  height: 20mm;
+  padding: 2.5mm 3.5mm;
+  border: 0.3mm solid #8d8a83;
+  background: #fff;
+}
+.rs-box-label {
+  display: block;
+  font-size: 9pt;
+  font-weight: 600;
+}
+.rs-box-value {
+  display: block;
+  margin-top: 2.5mm;
+  font-family: var(--rs-serif);
+  font-size: 13pt;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

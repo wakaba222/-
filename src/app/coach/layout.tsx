@@ -8,6 +8,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/coach/customers', label: '担当顧客' },
   { href: '/coach/records/new', label: '成果登録' },
   { href: '/coach/sales/new', label: '売上登録' },
+  { href: '/coach/sheet', label: '診断シート' },
   { href: '/coach/promotion', label: '昇格' },
 ];
 

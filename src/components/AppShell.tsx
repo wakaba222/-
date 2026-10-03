@@ -29,7 +29,7 @@ export function AppShell({
 
   return (
     <div className="min-h-dvh">
-      <header className="sticky top-0 z-20 border-b border-eagle-800 bg-eagle-900">
+      <header className="sticky top-0 z-20 border-b border-eagle-800 bg-eagle-900 print:hidden">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
           <Link href={isCoach ? '/coach' : '/admin'} className="flex items-baseline gap-2">
             <span className="text-xs font-semibold tracking-[0.25em] text-gold-500">EAGLE</span>
@@ -71,10 +71,10 @@ export function AppShell({
         ) : null}
       </header>
 
-      <main className={cn('mx-auto w-full max-w-7xl px-4 py-5', isCoach && 'max-w-2xl pb-28')}>{children}</main>
+      <main className={cn('mx-auto w-full max-w-7xl px-4 py-5', isCoach && 'max-w-2xl pb-28', 'print:max-w-none print:p-0')}>{children}</main>
 
       {isCoach ? (
-        <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-white/95 backdrop-blur">
+        <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-white/95 backdrop-blur print:hidden">
           <ul className="mx-auto flex max-w-2xl">
             {navItems.map((item) => (
               <li key={item.href} className="flex-1">
