@@ -304,7 +304,6 @@ a.resume:hover{border-color:var(--gold);background:linear-gradient(90deg,rgba(20
     <div class="eyebrow">Members Lesson Archive</div>
     <h2>構えから、<br>振り切るまで。</h2>
     <p>タイトルかサムネイルをタップすると、その動画がすぐに開きます。</p>
-    <div id="resume"></div>
   </section>
   <main id="main"></main>
   <footer><span class="eyebrow">Re:Swing Golf Lesson</span><span>構え方編 → スイング編 → ドリル集 の順に見るのがおすすめです。</span></footer>
@@ -398,7 +397,6 @@ const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } cat
 const narrow = matchMedia('(max-width: 600px)');
 let view = load('reswing-view', 'grid') === 'list' ? 'list' : 'grid';
 const viewNow = () => narrow.matches ? 'list' : view; // スマホは見渡しやすいリスト表示
-let last = load('reswing-last', null); // 最後に開いた動画の番号
 let query = '';
 
 function tileHTML(v) {
@@ -440,19 +438,11 @@ function renderChips() {
   }).join('');
   updateActiveChip();
 }
-function renderResume() {
-  const prev = Number.isInteger(last) ? VIDEOS[last] : null;
-  const v = prev ? VIDEOS[prev.idx + 1] : VIDEOS[0];
-  $('resume').innerHTML = v ? `<a class="resume" ${goAttrs(v)}>
-      <span class="resume-play" aria-hidden="true"></span>
-      <span class="resume-text"><span class="resume-label">${prev ? `前回の続き（「${esc(prev.title)}」の次）` : 'まずはここから'}</span><span class="resume-title">${stepLabel(v)}　${esc(v.title)}</span></span>
-    </a>` : '';
-}
 function cardHTML(v) {
-  return `<a class="card" ${goAttrs(v)}${v.idx === last ? ' data-last' : ''}>
+  return `<a class="card" ${goAttrs(v)}>
     <span class="thumb">${thumbInner(v)}</span>
     <span class="info">
-      <span class="step">${stepLabel(v)}${v.idx === last ? '<em>前回ここまで</em>' : ''}</span>
+      <span class="step">${stepLabel(v)}</span>
       <span class="info-title">${esc(v.title)}</span>
       <span class="sub">${srcLabelJa(v)}で開く ↗</span>
     </span>
@@ -477,7 +467,7 @@ function renderTools() {
   $('view-grid').setAttribute('aria-pressed', view === 'grid');
   $('view-list').setAttribute('aria-pressed', view === 'list');
 }
-function renderAll() { renderResume(); renderChips(); renderMain(); renderTools(); }
+function renderAll() { renderChips(); renderMain(); renderTools(); }
 narrow.addEventListener?.('change', renderMain);
 
 // ---- 移動 ----
@@ -504,15 +494,11 @@ addEventListener('scroll', () => { $('to-top').hidden = scrollY < 700; }, { pass
 $('to-top').addEventListener('click', () => jumpTo('top'));
 
 // ---- 操作 ----
-function setLast(v) { last = v.idx; save('reswing-last', last); }
 document.addEventListener('click', e => {
   const go = e.target.closest('[data-go]');
   if (go) {
     const v = VIDEOS[+go.dataset.go];
-    setLast(v);
     if (canEmbed) { e.preventDefault(); openPlayer(v.idx); }
-    // リンクはそのまま開かせて、表示の更新は少し後で行う
-    else setTimeout(() => { renderResume(); renderMain(); }, 250);
     return;
   }
   const j = e.target.closest('[data-jump]');
@@ -533,7 +519,6 @@ function openPlayer(i) {
   if (current < 0) lastFocus = document.activeElement;
   current = i;
   const v = VIDEOS[i], s = secOf(v.sec);
-  setLast(v);
   $('stage').innerHTML = `<iframe src="${embedUrl(v)}" title="${esc(v.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
   $('now-step').textContent = stepLabel(v);
   $('now-title').textContent = v.title;
@@ -552,7 +537,6 @@ function openPlayer(i) {
   document.body.style.overflow = 'hidden';
   ol.querySelector('[aria-current]')?.scrollIntoView({ block: 'nearest' });
   $('close').focus({ preventScroll: true });
-  renderResume(); renderMain();
 }
 function closePlayer() {
   sheet.hidden = true; current = -1;
