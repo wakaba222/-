@@ -323,6 +323,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     ['drill', 17, '連続素振り', 'gd', '19V1NIh4EzTXffYyNkz2kO8zMewLnUUgV']
   ];
   var THUMBS = {};
+  // claude.ai 上では外部の画像を読めないので、埋め込んだ画像だけを使う
+  var EXTERNAL_THUMBS = true; /*EXTERNAL_THUMBS*/
 
   var VIDEOS = RAW.map(function (r, i) {
     return { sec: r[0], step: r[1], title: r[2], src: r[3], id: r[4], idx: i };
@@ -371,7 +373,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
           '<span class="tile-num">' + pad(v.step) + '</span>' +
           '<span class="tile-title">' + esc(v.title) + '</span>' +
         '</span>' +
-        '<img src="' + thumbUrl(v) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb>' +
+        (THUMBS[v.id] || EXTERNAL_THUMBS ? '<img src="' + thumbUrl(v) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-thumb>' : '') +
         '<span class="play" aria-hidden="true"><i></i></span>' +
         '<span class="badge">' + srcLabel(v) + '</span>' +
       '</span>' +
